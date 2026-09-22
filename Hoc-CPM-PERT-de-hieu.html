@@ -1,0 +1,762 @@
+<title>Học CPM/PERT dễ hiểu</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script>
+(function(){
+  try{
+    var saved = localStorage.getItem("qlda-theme");
+    document.documentElement.dataset.theme = saved || "dark";
+  }catch(e){ document.documentElement.dataset.theme = "dark"; }
+  document.addEventListener("DOMContentLoaded", function(){
+    var btn = document.getElementById("themeBtn");
+    if(!btn) return;
+    function sync(){
+      var d = document.documentElement.dataset.theme === "dark";
+      btn.textContent = d ? "\u2600\uFE0F S\u00E1ng" : "\uD83C\uDF19 T\u1ED1i";
+      btn.setAttribute("aria-label", d ? "Chuy\u1EC3n sang giao di\u1EC7n s\u00E1ng" : "Chuy\u1EC3n sang giao di\u1EC7n t\u1ED1i");
+    }
+    btn.addEventListener("click", function(){
+      var next = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
+      document.documentElement.dataset.theme = next;
+      try{ localStorage.setItem("qlda-theme", next); }catch(e){}
+      sync();
+    });
+    sync();
+  });
+})();
+</script>
+<style>
+  :root{
+    --bg:#f6f7fb;
+    --surface:#ffffff;
+    --surface-2:#eef0fc;
+    --ink:#1c2033;
+    --ink-soft:#585e78;
+    --ink-faint:#8388a3;
+    --border:#e1e3f0;
+    --accent:#4a3fd9;
+    --accent-ink:#ffffff;
+    --accent-soft:#ece9ff;
+    --critical:#c8401f;
+    --critical-soft:#fbeae4;
+    --critical-ink:#8f2c14;
+    --slack:#0f8f5f;
+    --slack-soft:#e3f6ec;
+    --slack-ink:#0b6b47;
+    --shadow: 0 1px 2px rgba(28,32,51,.04), 0 8px 24px rgba(28,32,51,.06);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#13141d;
+      --surface:#1a1c28;
+      --surface-2:#232640;
+      --ink:#eef0fb;
+      --ink-soft:#a7acc7;
+      --ink-faint:#767b98;
+      --border:#2d3050;
+      --accent:#9b93ff;
+      --accent-ink:#14152a;
+      --accent-soft:#252a4d;
+      --critical:#ff8465;
+      --critical-soft:#3a231d;
+      --critical-ink:#ffb6a0;
+      --slack:#4fe0a4;
+      --slack-soft:#123326;
+      --slack-ink:#7ff0bf;
+      --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.35);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#13141d;
+    --surface:#1a1c28;
+    --surface-2:#232640;
+    --ink:#eef0fb;
+    --ink-soft:#a7acc7;
+    --ink-faint:#767b98;
+    --border:#2d3050;
+    --accent:#9b93ff;
+    --accent-ink:#14152a;
+    --accent-soft:#252a4d;
+    --critical:#ff8465;
+    --critical-soft:#3a231d;
+    --critical-ink:#ffb6a0;
+    --slack:#4fe0a4;
+    --slack-soft:#123326;
+    --slack-ink:#7ff0bf;
+    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.35);
+  }
+
+  html{scroll-behavior:smooth}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:"Be Vietnam Pro",system-ui,-apple-system,"Segoe UI",sans-serif;
+    line-height:1.6;
+    padding-inline:16px;
+  }
+  .wrap{max-width:900px;margin-inline:auto;padding-block:28px 64px}
+  h1,h2,h3{font-family:"Be Vietnam Pro",system-ui,sans-serif;font-weight:800;line-height:1.2;text-wrap:balance;letter-spacing:-.01em}
+  h1{font-size:clamp(1.6rem,4.5vw,2.35rem);margin:8px 0 10px}
+  h2{font-size:clamp(1.2rem,3vw,1.5rem);margin:0 0 4px;color:var(--ink)}
+  h3{font-size:1.02rem;margin:0 0 6px;color:var(--ink)}
+  p{margin:0 0 12px;max-width:68ch}
+  .mono{font-family:"IBM Plex Mono",ui-monospace,monospace}
+  strong{font-weight:700}
+
+  /* ---------- header ---------- */
+  header.top{padding-block:6px 22px}
+  .eyebrow{
+    font-family:"IBM Plex Mono",monospace;
+    font-size:.72rem;letter-spacing:.09em;text-transform:uppercase;
+    color:var(--accent);font-weight:600;margin:0 0 10px;
+  }
+  .lede{color:var(--ink-soft);font-size:1.02rem;max-width:60ch}
+  nav.toc{
+    display:flex;flex-wrap:wrap;gap:8px;margin-top:18px;
+  }
+  nav.toc a{
+    display:inline-flex;align-items:center;gap:6px;
+    padding:7px 13px;border-radius:999px;
+    background:var(--surface);border:1px solid var(--border);
+    color:var(--ink-soft);text-decoration:none;font-size:.86rem;font-weight:500;
+    box-shadow:var(--shadow);
+  }
+  nav.toc a:hover{color:var(--accent);border-color:var(--accent)}
+  nav.toc a .n{
+    font-family:"IBM Plex Mono",monospace;font-size:.72rem;
+    background:var(--accent-soft);color:var(--accent);
+    width:18px;height:18px;border-radius:50%;
+    display:inline-flex;align-items:center;justify-content:center;
+  }
+
+  /* ---------- sections ---------- */
+  section{margin-block:44px}
+  section > .kicker{
+    font-family:"IBM Plex Mono",monospace;font-size:.72rem;letter-spacing:.08em;
+    text-transform:uppercase;color:var(--ink-faint);margin-bottom:6px;font-weight:600;
+  }
+
+  /* ---------- cards / callouts ---------- */
+  .card{
+    background:var(--surface);border:1px solid var(--border);
+    border-radius:16px;padding:18px 20px;box-shadow:var(--shadow);
+  }
+  .callout{
+    border-radius:12px;padding:14px 16px;margin:16px 0;
+    border-left:4px solid var(--accent);background:var(--accent-soft);
+  }
+  .callout p{margin:0;max-width:none}
+  .callout.tip{border-color:var(--accent)}
+  .callout.crit{border-color:var(--critical);background:var(--critical-soft)}
+  .callout.slack{border-color:var(--slack);background:var(--slack-soft)}
+  .callout .lbl{
+    font-family:"IBM Plex Mono",monospace;font-size:.7rem;font-weight:700;
+    letter-spacing:.06em;text-transform:uppercase;display:block;margin-bottom:6px;
+  }
+  .callout.tip .lbl{color:var(--accent)}
+  .callout.crit .lbl{color:var(--critical-ink)}
+  .callout.slack .lbl{color:var(--slack-ink)}
+
+  /* ---------- legend ---------- */
+  .legend{
+    display:flex;flex-wrap:wrap;gap:16px;margin:14px 0 4px;
+    font-size:.86rem;color:var(--ink-soft);
+  }
+  .legend .item{display:flex;align-items:center;gap:8px}
+  .legend svg{flex:none}
+
+  /* ---------- diagrams ---------- */
+  .diagram-wrap{
+    background:var(--surface);border:1px solid var(--border);border-radius:16px;
+    padding:14px 8px 4px;box-shadow:var(--shadow);overflow-x:auto;margin:14px 0;
+  }
+  .diagram-wrap svg{display:block;min-width:560px;width:100%;height:auto}
+  .node-ring{fill:var(--surface);stroke:var(--accent);stroke-width:2.5}
+  .node-ring.crit{stroke:var(--critical);stroke-width:3}
+  .node-num{font-family:"IBM Plex Mono",monospace;font-weight:700;font-size:15px;fill:var(--ink)}
+  .node-label{font-family:"Be Vietnam Pro",sans-serif;font-size:12.5px;font-weight:600;fill:var(--ink)}
+  .node-stat{font-family:"IBM Plex Mono",monospace;font-size:11px;fill:var(--ink-faint)}
+  .edge{stroke:var(--ink-faint);stroke-width:2;fill:none}
+  .edge.crit{stroke:var(--critical);stroke-width:3}
+  .edge.dummy{stroke-dasharray:5 4}
+  .edge-label{font-family:"Be Vietnam Pro",sans-serif;font-size:12px;font-weight:600;fill:var(--ink-soft)}
+  .edge-label.crit{fill:var(--critical-ink);font-weight:700}
+  .edge-label-bg{fill:var(--surface)}
+
+  /* ---------- tables ---------- */
+  .table-scroll{overflow-x:auto;margin:14px 0;border-radius:14px;border:1px solid var(--border);box-shadow:var(--shadow)}
+  table{border-collapse:collapse;width:100%;min-width:480px;background:var(--surface)}
+  caption{text-align:left;font-size:.82rem;color:var(--ink-faint);padding:10px 14px 0;font-style:normal}
+  th,td{
+    padding:9px 13px;text-align:center;border-bottom:1px solid var(--border);
+    font-size:.9rem;white-space:nowrap;
+  }
+  thead th{
+    background:var(--surface-2);color:var(--ink-soft);font-weight:700;
+    font-size:.78rem;letter-spacing:.03em;text-transform:uppercase;
+  }
+  th:first-child,td:first-child{text-align:left;font-weight:600;color:var(--ink)}
+  tbody tr:last-child td{border-bottom:none}
+  td.num{font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums}
+  td.crit{background:var(--critical-soft);color:var(--critical-ink);font-weight:700}
+  td.slack{background:var(--slack-soft);color:var(--slack-ink);font-weight:700}
+  .chip{
+    display:inline-block;font-family:"IBM Plex Mono",monospace;font-size:.78rem;
+    font-weight:700;padding:2px 8px;border-radius:6px;background:var(--accent-soft);color:var(--accent);
+  }
+
+  /* ---------- glossary ---------- */
+  .glossary{display:grid;gap:12px;margin:14px 0}
+  .g-row{
+    display:grid;grid-template-columns:64px 1fr;gap:14px;
+    background:var(--surface);border:1px solid var(--border);border-radius:14px;
+    padding:14px 16px;box-shadow:var(--shadow);align-items:start;
+  }
+  .g-sym{
+    font-family:"IBM Plex Mono",monospace;font-weight:800;font-size:1.3rem;
+    color:var(--accent);text-align:center;padding-top:2px;
+  }
+  .g-row h4{margin:0 0 3px;font-size:.98rem}
+  .g-row p{margin:0;font-size:.9rem;color:var(--ink-soft);max-width:none}
+
+  /* ---------- steps ---------- */
+  .steps{display:grid;gap:10px;margin:14px 0}
+  .step{
+    display:grid;grid-template-columns:30px 1fr;gap:12px;
+    background:var(--surface);border:1px solid var(--border);border-radius:12px;
+    padding:12px 14px;box-shadow:var(--shadow);align-items:start;
+  }
+  .step .idx{
+    width:26px;height:26px;border-radius:50%;background:var(--accent);color:var(--accent-ink);
+    display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.82rem;
+    font-family:"IBM Plex Mono",monospace;
+  }
+  .step p{margin:0;font-size:.92rem;color:var(--ink-soft)}
+  .step strong{color:var(--ink)}
+
+  /* ---------- practice / details ---------- */
+  details{
+    background:var(--surface);border:1px solid var(--border);border-radius:14px;
+    padding:4px 18px;box-shadow:var(--shadow);margin:16px 0;
+  }
+  details[open]{padding-bottom:16px}
+  summary{
+    cursor:pointer;padding:14px 0;font-weight:700;color:var(--accent);
+    list-style:none;display:flex;align-items:center;gap:8px;
+  }
+  summary::-webkit-details-marker{display:none}
+  summary::before{content:"▸";display:inline-block;transition:transform .15s}
+  details[open] summary::before{transform:rotate(90deg)}
+  .qlist{display:grid;gap:10px;margin:14px 0}
+  .qlist li{
+    background:var(--surface-2);border-radius:10px;padding:10px 14px;font-size:.92rem;
+    list-style:none;
+  }
+  .qlist{padding:0}
+
+  hr.rule{border:none;border-top:1px solid var(--border);margin:0}
+
+  footer{margin-top:52px;padding-top:20px;border-top:1px solid var(--border);color:var(--ink-faint);font-size:.82rem}
+
+  @media (max-width:520px){
+    .g-row{grid-template-columns:40px 1fr}
+    th,td{padding:8px 9px;font-size:.82rem}
+  }
+
+  /* theme toggle */
+  .theme-btn{
+    position:fixed;top:12px;right:14px;z-index:50;
+    font-family:"Be Vietnam Pro",system-ui,sans-serif;font-size:.78rem;font-weight:700;
+    padding:7px 13px;border-radius:999px;cursor:pointer;
+    background:var(--surface);color:var(--ink-soft);border:1px solid var(--border);
+    box-shadow:var(--shadow);
+  }
+  .theme-btn:hover{color:var(--ink);border-color:var(--accent)}
+  .theme-btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  @media print{ .theme-btn{display:none} }
+</style>
+
+<button id="themeBtn" class="theme-btn" type="button">☀️ Sáng</button>
+<div class="wrap">
+
+  <header class="top">
+    <p class="eyebrow">Quản lý dự án · Chương 4</p>
+    <h1>Học CPM/PERT dễ hiểu — bắt đầu từ số 0</h1>
+    <p class="lede">Không cần thuộc công thức trước. Trang này dạy bằng ví dụ đời thường (bữa sáng) trước, sau đó mới gắn tên gọi chính thức và áp dụng vào bài tập thi.</p>
+    <nav class="toc">
+      <a href="#vidu"><span class="n">1</span> Ví dụ bữa sáng</a>
+      <a href="#khainiem"><span class="n">2</span> Bảng ký hiệu</a>
+      <a href="#tinhtoan"><span class="n">3</span> Tính từng bước</a>
+      <a href="#duan"><span class="n">4</span> Áp dụng bài thi</a>
+      <a href="#luyen"><span class="n">5</span> Tự luyện tập</a>
+    </nav>
+  </header>
+
+  <!-- ============ SECTION 1 ============ -->
+  <section id="vidu">
+    <p class="kicker">Phần 1 · Trực giác trước, công thức sau</p>
+    <h2>Tình huống: chuẩn bị bữa sáng</h2>
+    <p>Bạn cần làm 5 việc. Ba việc đầu làm <strong>song song</strong> được (không việc nào chờ việc nào). Hai việc sau thì phải <strong>chờ</strong> việc trước xong.</p>
+
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>Việc</th><th>Thời gian</th><th>Phải chờ việc nào?</th></tr></thead>
+        <tbody>
+          <tr><td>Đun nước sôi</td><td class="num">5 phút</td><td>Không cần chờ</td></tr>
+          <tr><td>Nướng bánh mì</td><td class="num">2 phút</td><td>Không cần chờ</td></tr>
+          <tr><td>Chiên trứng</td><td class="num">3 phút</td><td>Không cần chờ</td></tr>
+          <tr><td>Pha cà phê</td><td class="num">2 phút</td><td>Đun nước xong</td></tr>
+          <tr><td>Bày ra ăn</td><td class="num">1 phút</td><td>Đủ cả bánh mì + trứng + cà phê</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="callout tip">
+      <span class="lbl">Tự hỏi trước khi đọc tiếp</span>
+      <p>Sớm nhất bao lâu thì bạn được ăn sáng? Đừng cộng hết 5 việc lại — hãy nghĩ xem <strong>cái gì làm bạn phải đứng chờ lâu nhất</strong>.</p>
+    </div>
+
+    <p><strong>Suy luận:</strong> bánh mì (2′) và trứng (3′) xong rất nhanh. Nhưng cà phê thì phải đun nước (5′) rồi mới pha (2′) → <strong>7 phút mới xong</strong>. Vậy dù bánh mì với trứng đã xong từ lâu, bạn vẫn đứng chờ cà phê tới phút thứ 7. Sau đó bày ra ăn (+1′) → <strong>tổng cộng 8 phút</strong>.</p>
+
+    <h3 style="margin-top:22px">Vẽ thành sơ đồ</h3>
+    <p>Mỗi <strong>mũi tên</strong> là một công việc thật (có thời gian). Mũi tên <strong>nét đứt</strong> là "công việc ảo" — không tốn thời gian, chỉ dùng để nói "phải chờ đủ các nhánh này mới đi tiếp". Đường <span style="color:var(--critical);font-weight:700">màu cam đậm</span> là chuỗi việc dài nhất — không được trễ dù 1 phút.</p>
+
+    <div class="legend">
+      <div class="item"><svg width="40" height="14"><line x1="2" y1="7" x2="34" y2="7" class="edge" marker-end="url(#lgN)"/></svg> Công việc thật, không găng</div>
+      <div class="item"><svg width="40" height="14"><line x1="2" y1="7" x2="34" y2="7" class="edge crit" marker-end="url(#lgC)"/></svg> Công việc trên đường găng</div>
+      <div class="item"><svg width="40" height="14"><line x1="2" y1="7" x2="34" y2="7" class="edge dummy" marker-end="url(#lgN)"/></svg> Công việc ảo (0 phút, chỉ để chờ)</div>
+    </div>
+
+    <div class="diagram-wrap">
+      <svg viewBox="0 0 700 340" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <marker id="lgN" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" style="fill:var(--ink-faint)"/></marker>
+          <marker id="lgC" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" style="fill:var(--critical)"/></marker>
+        </defs>
+
+        <!-- edges (drawn first, under nodes) -->
+        <line x1="50" y1="170" x2="230" y2="60" class="edge crit" marker-end="url(#lgC)"/>
+        <line x1="50" y1="170" x2="230" y2="170" class="edge" marker-end="url(#lgN)"/>
+        <line x1="50" y1="170" x2="230" y2="280" class="edge" marker-end="url(#lgN)"/>
+        <line x1="230" y1="60" x2="410" y2="60" class="edge crit" marker-end="url(#lgC)"/>
+        <line x1="230" y1="170" x2="540" y2="170" class="edge dummy" marker-end="url(#lgN)"/>
+        <line x1="230" y1="280" x2="540" y2="170" class="edge dummy" marker-end="url(#lgN)"/>
+        <line x1="410" y1="60" x2="540" y2="170" class="edge crit dummy" marker-end="url(#lgC)"/>
+        <line x1="540" y1="170" x2="650" y2="170" class="edge crit" marker-end="url(#lgC)"/>
+
+        <!-- edge labels -->
+        <g>
+          <rect x="98" y="88" width="98" height="16" class="edge-label-bg"/>
+          <text x="147" y="100" text-anchor="middle" class="edge-label crit">Đun nước · 5′</text>
+        </g>
+        <g>
+          <rect x="98" y="155" width="90" height="16" class="edge-label-bg"/>
+          <text x="140" y="167" text-anchor="middle" class="edge-label">Nướng bánh · 2′</text>
+        </g>
+        <g>
+          <rect x="90" y="238" width="94" height="16" class="edge-label-bg"/>
+          <text x="140" y="250" text-anchor="middle" class="edge-label">Chiên trứng · 3′</text>
+        </g>
+        <g>
+          <rect x="272" y="34" width="96" height="16" class="edge-label-bg"/>
+          <text x="320" y="46" text-anchor="middle" class="edge-label crit">Pha cà phê · 2′</text>
+        </g>
+        <g>
+          <rect x="358" y="152" width="58" height="16" class="edge-label-bg"/>
+          <text x="387" y="164" text-anchor="middle" class="edge-label">chờ · 0</text>
+        </g>
+        <g>
+          <rect x="356" y="238" width="58" height="16" class="edge-label-bg"/>
+          <text x="385" y="250" text-anchor="middle" class="edge-label">chờ · 0</text>
+        </g>
+        <g>
+          <rect x="446" y="96" width="58" height="16" class="edge-label-bg"/>
+          <text x="475" y="108" text-anchor="middle" class="edge-label crit">chờ · 0</text>
+        </g>
+        <g>
+          <rect x="562" y="152" width="98" height="16" class="edge-label-bg"/>
+          <text x="611" y="164" text-anchor="middle" class="edge-label crit">Bày ra ăn · 1′</text>
+        </g>
+
+        <!-- nodes -->
+        <circle cx="50" cy="170" r="24" class="node-ring crit"/>
+        <text x="50" y="176" text-anchor="middle" class="node-num">1</text>
+        <text x="50" y="212" text-anchor="middle" class="node-label">Bắt đầu</text>
+        <text x="50" y="226" text-anchor="middle" class="node-stat">E=0 · L=0</text>
+
+        <circle cx="230" cy="60" r="24" class="node-ring crit"/>
+        <text x="230" y="66" text-anchor="middle" class="node-num">2</text>
+        <text x="230" y="20" text-anchor="middle" class="node-label">Nước xong</text>
+        <text x="230" y="34" text-anchor="middle" class="node-stat">E=5 · L=5</text>
+
+        <circle cx="230" cy="170" r="24" class="node-ring"/>
+        <text x="230" y="176" text-anchor="middle" class="node-num">3</text>
+        <text x="230" y="212" text-anchor="middle" class="node-label">Bánh mì xong</text>
+        <text x="230" y="226" text-anchor="middle" class="node-stat">E=2 · L=7</text>
+
+        <circle cx="230" cy="280" r="24" class="node-ring"/>
+        <text x="230" y="286" text-anchor="middle" class="node-num">4</text>
+        <text x="230" y="322" text-anchor="middle" class="node-label">Trứng xong</text>
+        <text x="230" y="336" text-anchor="middle" class="node-stat">E=3 · L=7</text>
+
+        <circle cx="410" cy="60" r="24" class="node-ring crit"/>
+        <text x="410" y="66" text-anchor="middle" class="node-num">5</text>
+        <text x="410" y="20" text-anchor="middle" class="node-label">Cà phê xong</text>
+        <text x="410" y="34" text-anchor="middle" class="node-stat">E=7 · L=7</text>
+
+        <circle cx="540" cy="170" r="24" class="node-ring crit"/>
+        <text x="540" y="176" text-anchor="middle" class="node-num">6</text>
+        <text x="540" y="212" text-anchor="middle" class="node-label">Sẵn sàng ăn</text>
+        <text x="540" y="226" text-anchor="middle" class="node-stat">E=7 · L=7</text>
+
+        <circle cx="650" cy="170" r="24" class="node-ring crit"/>
+        <text x="650" y="176" text-anchor="middle" class="node-num">7</text>
+        <text x="650" y="212" text-anchor="middle" class="node-label">Ăn xong</text>
+        <text x="650" y="226" text-anchor="middle" class="node-stat">E=8 · L=8</text>
+      </svg>
+    </div>
+
+    <div class="callout crit">
+      <span class="lbl">Đọc sơ đồ này thế nào</span>
+      <p>Đường cam đậm <strong>1 → 2 → 5 → 6 → 7</strong> (đun nước → pha cà phê → chờ → bày ăn) dài <strong>8 phút</strong> — đó là đường găng. Nút 3 và 4 (bánh mì, trứng) nằm ngoài đường cam vì chúng có "dư giờ": xong sớm rồi phải đứng đợi.</p>
+    </div>
+  </section>
+
+  <hr class="rule">
+
+  <!-- ============ SECTION 2 ============ -->
+  <section id="khainiem">
+    <p class="kicker">Phần 2 · Đặt tên cho thứ bạn vừa suy luận</p>
+    <h2>Bảng ký hiệu — không có gì bí ẩn cả</h2>
+    <p>Mỗi ký hiệu dưới đây chỉ là <strong>tên chính thức</strong> cho một câu hỏi bạn vừa tự hỏi trong đầu ở phần 1.</p>
+
+    <div class="glossary">
+      <div class="g-row">
+        <div class="g-sym">E</div>
+        <div>
+          <h4>Thời gian sớm nhất <span class="chip">Early</span></h4>
+          <p>"Sớm nhất thì bao giờ mốc này xong?" — đi <strong>xuôi</strong> từ đầu dự án, cộng dồn thời gian. Chỗ nào nhiều việc đổ về cùng lúc thì phải <strong>chọn số LỚN NHẤT</strong> (vì phải chờ nhánh chậm nhất).</p>
+        </div>
+      </div>
+      <div class="g-row">
+        <div class="g-sym">L</div>
+        <div>
+          <h4>Thời gian muộn nhất <span class="chip">Late</span></h4>
+          <p>"Trễ nhất thì tới bao giờ mốc này phải xong, để cả dự án không bị trễ?" — đi <strong>ngược</strong> từ mốc cuối cùng, trừ dần. Chỗ nào tách ra nhiều nhánh thì phải <strong>chọn số NHỎ NHẤT</strong> (chiều theo nhánh khắt khe nhất).</p>
+        </div>
+      </div>
+      <div class="g-row">
+        <div class="g-sym">S</div>
+        <div>
+          <h4>Thời gian dự trữ <span class="chip">Slack / Float</span></h4>
+          <p>= L − E. "Mốc này còn dư bao nhiêu thời gian rảnh?" Nếu S = 0 → không dư tí nào → nằm trên <strong>đường găng</strong>.</p>
+        </div>
+      </div>
+      <div class="g-row">
+        <div class="g-sym">CP</div>
+        <div>
+          <h4>Đường găng <span class="chip">Critical Path</span></h4>
+          <p>Chuỗi công việc <strong>dài nhất</strong> từ đầu đến cuối dự án — chuỗi có S = 0 ở mọi mốc. Đây là thứ quyết định tổng thời gian dự án, trễ 1 ngày ở đây là cả dự án trễ 1 ngày.</p>
+        </div>
+      </div>
+      <div class="g-row">
+        <div class="g-sym">TF</div>
+        <div>
+          <h4>Dự trữ toàn phần <span class="chip">Total Float</span></h4>
+          <p>Một <em>công việc</em> (không phải mốc) có thể trễ tối đa bao nhiêu mà <strong>cả dự án</strong> vẫn không trễ. TF = LS − ES (thời điểm bắt đầu muộn nhất − sớm nhất).</p>
+        </div>
+      </div>
+      <div class="g-row">
+        <div class="g-sym">TD</div>
+        <div>
+          <h4>Dự trữ tự do <span class="chip">Free Float</span></h4>
+          <p>Một công việc có thể trễ tối đa bao nhiêu mà <strong>không làm ảnh hưởng đến việc ngay sau nó</strong> (chặt hơn TF).</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <hr class="rule">
+
+  <!-- ============ SECTION 3 ============ -->
+  <section id="tinhtoan">
+    <p class="kicker">Phần 3 · Tính lại ví dụ bữa sáng bằng "công thức"</p>
+    <h2>Cùng một con số — chỉ khác cách viết</h2>
+    <p>Đi qua từng mốc, để thấy công thức <span class="mono">E</span> / <span class="mono">L</span> chỉ là cách viết lại đúng điều bạn vừa suy luận, không có gì mới.</p>
+
+    <div class="table-scroll">
+      <table>
+        <caption>Bước A — tính E (đi xuôi, chỗ hội tụ lấy MAX)</caption>
+        <thead><tr><th>Mốc</th><th>Cách tính</th><th>E</th></tr></thead>
+        <tbody>
+          <tr><td>1 · Bắt đầu</td><td>—</td><td class="num">0</td></tr>
+          <tr><td>2 · Nước xong</td><td class="mono">0 + 5</td><td class="num">5</td></tr>
+          <tr><td>3 · Bánh mì xong</td><td class="mono">0 + 2</td><td class="num">2</td></tr>
+          <tr><td>4 · Trứng xong</td><td class="mono">0 + 3</td><td class="num">3</td></tr>
+          <tr><td>5 · Cà phê xong</td><td class="mono">5 + 2</td><td class="num">7</td></tr>
+          <tr><td>6 · Sẵn sàng ăn</td><td class="mono">max(2, 3, 7)</td><td class="num crit">7</td></tr>
+          <tr><td>7 · Ăn xong</td><td class="mono">7 + 1</td><td class="num crit">8</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="callout tip"><span class="lbl">Đọc dòng cuối</span><p>E = 8 ở mốc cuối chính là <strong>tổng thời gian cả dự án</strong>. Luôn kiểm tra: đây có phải con số bạn tự nhẩm ra ở Phần 1 không?</p></div>
+
+    <div class="table-scroll">
+      <table>
+        <caption>Bước B — tính L (đi ngược từ cuối, chỗ tách nhánh lấy MIN)</caption>
+        <thead><tr><th>Mốc</th><th>Cách tính</th><th>L</th></tr></thead>
+        <tbody>
+          <tr><td>7 · Ăn xong</td><td>= E ở mốc cuối</td><td class="num crit">8</td></tr>
+          <tr><td>6 · Sẵn sàng ăn</td><td class="mono">8 − 1</td><td class="num crit">7</td></tr>
+          <tr><td>5 · Cà phê xong</td><td class="mono">7 − 0</td><td class="num crit">7</td></tr>
+          <tr><td>4 · Trứng xong</td><td class="mono">7 − 0</td><td class="num">7</td></tr>
+          <tr><td>3 · Bánh mì xong</td><td class="mono">7 − 0</td><td class="num">7</td></tr>
+          <tr><td>2 · Nước xong</td><td class="mono">7 − 2</td><td class="num crit">5</td></tr>
+          <tr><td>1 · Bắt đầu</td><td class="mono">min(5−5, 7−2, 7−3)</td><td class="num crit">0</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="table-scroll">
+      <table>
+        <caption>Bước C — Dự trữ S = L − E → tìm đường găng</caption>
+        <thead><tr><th>Mốc</th><th>E</th><th>L</th><th>S = L−E</th><th>Kết luận</th></tr></thead>
+        <tbody>
+          <tr><td>1 · Bắt đầu</td><td class="num">0</td><td class="num">0</td><td class="num crit">0</td><td>Trên đường găng</td></tr>
+          <tr><td>2 · Nước xong</td><td class="num">5</td><td class="num">5</td><td class="num crit">0</td><td>Trên đường găng</td></tr>
+          <tr><td>3 · Bánh mì xong</td><td class="num">2</td><td class="num">7</td><td class="num slack">5</td><td>Dư 5 phút</td></tr>
+          <tr><td>4 · Trứng xong</td><td class="num">3</td><td class="num">7</td><td class="num slack">4</td><td>Dư 4 phút</td></tr>
+          <tr><td>5 · Cà phê xong</td><td class="num">7</td><td class="num">7</td><td class="num crit">0</td><td>Trên đường găng</td></tr>
+          <tr><td>6 · Sẵn sàng ăn</td><td class="num">7</td><td class="num">7</td><td class="num crit">0</td><td>Trên đường găng</td></tr>
+          <tr><td>7 · Ăn xong</td><td class="num">8</td><td class="num">8</td><td class="num crit">0</td><td>Trên đường găng</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="callout slack">
+      <span class="lbl">Vì sao khớp với trực giác</span>
+      <p>Bánh mì (S=5) và trứng (S=4) là hai việc "rảnh rỗi" — đúng như bạn cảm nhận ở Phần 1: chúng xong sớm nhưng phải đứng chờ. Toàn bộ các mốc còn lại có S=0 vì chúng nằm trên chuỗi "đun nước → pha cà phê → chờ → bày ăn" — chuỗi quyết định cả 8 phút.</p>
+    </div>
+  </section>
+
+  <hr class="rule">
+
+  <!-- ============ SECTION 4 ============ -->
+  <section id="duan">
+    <p class="kicker">Phần 4 · Đúng bài dạng sẽ ra thi</p>
+    <h2>Áp dụng: "Dự án X" — 10 công việc</h2>
+    <p>Đây là bài xuất hiện lặp lại trong slide chương 3 &amp; 4 — rất có thể là bài mẫu cho đề thi. Nhìn kỹ sẽ thấy nó là <strong>bản phóng to của ví dụ bữa sáng</strong>: vẫn là các việc chạy song song, có chỗ hội tụ, có chỗ tách nhánh.</p>
+
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>Công việc</th><th>A</th><th>B</th><th>C</th><th>D</th><th>E</th><th>F</th><th>G</th><th>H</th><th>I</th><th>J</th></tr></thead>
+        <tbody>
+          <tr><td>Việc trước</td><td>–</td><td>–</td><td>–</td><td>A</td><td>B</td><td>B</td><td>C</td><td>D,E</td><td>G</td><td>F,H,I</td></tr>
+          <tr><td>Thời gian (ngày)</td><td class="num">1</td><td class="num">2</td><td class="num">3</td><td class="num">4</td><td class="num">5</td><td class="num">6</td><td class="num">6</td><td class="num">3</td><td class="num">2</td><td class="num">3</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="diagram-wrap">
+      <svg viewBox="0 0 740 460" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <marker id="pjN" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" style="fill:var(--ink-faint)"/></marker>
+          <marker id="pjC" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" style="fill:var(--critical)"/></marker>
+        </defs>
+
+        <line x1="50" y1="230" x2="200" y2="90"  class="edge" marker-end="url(#pjN)"/>
+        <line x1="50" y1="230" x2="200" y2="230" class="edge" marker-end="url(#pjN)"/>
+        <line x1="50" y1="230" x2="200" y2="370" class="edge crit" marker-end="url(#pjC)"/>
+        <line x1="200" y1="90"  x2="370" y2="160" class="edge" marker-end="url(#pjN)"/>
+        <line x1="200" y1="230" x2="370" y2="160" class="edge" marker-end="url(#pjN)"/>
+        <line x1="200" y1="230" x2="540" y2="260" class="edge" marker-end="url(#pjN)"/>
+        <line x1="200" y1="370" x2="370" y2="370" class="edge crit" marker-end="url(#pjC)"/>
+        <line x1="370" y1="160" x2="540" y2="260" class="edge" marker-end="url(#pjN)"/>
+        <line x1="370" y1="370" x2="540" y2="260" class="edge crit" marker-end="url(#pjC)"/>
+        <line x1="540" y1="260" x2="670" y2="260" class="edge crit" marker-end="url(#pjC)"/>
+
+        <g><rect x="93" y="140" width="46" height="16" class="edge-label-bg"/><text x="116" y="152" text-anchor="middle" class="edge-label">A · 1</text></g>
+        <g><rect x="98" y="214" width="46" height="16" class="edge-label-bg"/><text x="121" y="226" text-anchor="middle" class="edge-label">B · 2</text></g>
+        <g><rect x="98" y="308" width="46" height="16" class="edge-label-bg"/><text x="121" y="320" text-anchor="middle" class="edge-label crit">C · 3</text></g>
+        <g><rect x="262" y="108" width="46" height="16" class="edge-label-bg"/><text x="285" y="120" text-anchor="middle" class="edge-label">D · 4</text></g>
+        <g><rect x="262" y="198" width="46" height="16" class="edge-label-bg"/><text x="285" y="210" text-anchor="middle" class="edge-label">E · 5</text></g>
+        <g><rect x="345" y="230" width="46" height="16" class="edge-label-bg"/><text x="368" y="242" text-anchor="middle" class="edge-label">F · 6</text></g>
+        <g><rect x="262" y="354" width="46" height="16" class="edge-label-bg"/><text x="285" y="366" text-anchor="middle" class="edge-label crit">G · 6</text></g>
+        <g><rect x="432" y="188" width="46" height="16" class="edge-label-bg"/><text x="455" y="200" text-anchor="middle" class="edge-label">H · 3</text></g>
+        <g><rect x="432" y="308" width="42" height="16" class="edge-label-bg"/><text x="453" y="320" text-anchor="middle" class="edge-label crit">I · 2</text></g>
+        <g><rect x="580" y="230" width="42" height="16" class="edge-label-bg"/><text x="601" y="242" text-anchor="middle" class="edge-label crit">J · 3</text></g>
+
+        <circle cx="50" cy="230" r="24" class="node-ring crit"/>
+        <text x="50" y="236" text-anchor="middle" class="node-num">1</text>
+        <text x="50" y="272" text-anchor="middle" class="node-label">Bắt đầu</text>
+        <text x="50" y="286" text-anchor="middle" class="node-stat">E=0 · L=0</text>
+
+        <circle cx="200" cy="90" r="24" class="node-ring"/>
+        <text x="200" y="96" text-anchor="middle" class="node-num">2</text>
+        <text x="200" y="52" text-anchor="middle" class="node-label">Sau A</text>
+        <text x="200" y="66" text-anchor="middle" class="node-stat">E=1 · L=4</text>
+
+        <circle cx="200" cy="230" r="24" class="node-ring"/>
+        <text x="200" y="236" text-anchor="middle" class="node-num">3</text>
+        <text x="200" y="272" text-anchor="middle" class="node-label">Sau B</text>
+        <text x="200" y="286" text-anchor="middle" class="node-stat">E=2 · L=3</text>
+
+        <circle cx="200" cy="370" r="24" class="node-ring crit"/>
+        <text x="200" y="376" text-anchor="middle" class="node-num">4</text>
+        <text x="200" y="412" text-anchor="middle" class="node-label">Sau C</text>
+        <text x="200" y="426" text-anchor="middle" class="node-stat">E=3 · L=3</text>
+
+        <circle cx="370" cy="160" r="24" class="node-ring"/>
+        <text x="370" y="166" text-anchor="middle" class="node-num">5</text>
+        <text x="370" y="122" text-anchor="middle" class="node-label">Sau D, E</text>
+        <text x="370" y="136" text-anchor="middle" class="node-stat">E=7 · L=8</text>
+
+        <circle cx="370" cy="370" r="24" class="node-ring crit"/>
+        <text x="370" y="376" text-anchor="middle" class="node-num">6</text>
+        <text x="370" y="412" text-anchor="middle" class="node-label">Sau G</text>
+        <text x="370" y="426" text-anchor="middle" class="node-stat">E=9 · L=9</text>
+
+        <circle cx="540" cy="260" r="24" class="node-ring crit"/>
+        <text x="540" y="266" text-anchor="middle" class="node-num">7</text>
+        <text x="540" y="222" text-anchor="middle" class="node-label">Sau F, H, I</text>
+        <text x="540" y="236" text-anchor="middle" class="node-stat">E=11 · L=11</text>
+
+        <circle cx="670" cy="260" r="24" class="node-ring crit"/>
+        <text x="670" y="266" text-anchor="middle" class="node-num">8</text>
+        <text x="670" y="302" text-anchor="middle" class="node-label">Kết thúc</text>
+        <text x="670" y="316" text-anchor="middle" class="node-stat">E=14 · L=14</text>
+      </svg>
+    </div>
+
+    <div class="steps">
+      <div class="step"><div class="idx">1</div><p><strong>Đi xuôi (E):</strong> E5 = max(1+4, 2+5) = 7 &nbsp;·&nbsp; E7 = max(7+3, 9+2, 2+6) = 11 &nbsp;·&nbsp; E8 = 11+3 = <strong>14 ngày</strong> (tổng thời gian dự án)</p></div>
+      <div class="step"><div class="idx">2</div><p><strong>Đi ngược (L):</strong> L3 = min(8−5, 11−6) = 3 &nbsp;·&nbsp; L1 = min(4−1, 3−2, 3−3) = <strong>0</strong> ✓ khớp</p></div>
+      <div class="step"><div class="idx">3</div><p><strong>Đường găng</strong> = các sự kiện có S=0: 1 → 4 → 6 → 7 → 8, tức công việc <strong>C → G → I → J</strong> (3+6+2+3 = 14 ✓)</p></div>
+    </div>
+
+    <div class="table-scroll">
+      <table>
+        <caption>Bảng thời gian dự trữ từng công việc (TF = LS−ES, TD = free float)</caption>
+        <thead><tr><th>CV</th><th>T</th><th>ES</th><th>EF</th><th>LS</th><th>LF</th><th>TF</th><th>TD</th></tr></thead>
+        <tbody>
+          <tr><td>A</td><td class="num">1</td><td class="num">0</td><td class="num">1</td><td class="num">3</td><td class="num">4</td><td class="num slack">3</td><td class="num">0</td></tr>
+          <tr><td>B</td><td class="num">2</td><td class="num">0</td><td class="num">2</td><td class="num">1</td><td class="num">3</td><td class="num slack">1</td><td class="num">0</td></tr>
+          <tr><td>C</td><td class="num">3</td><td class="num">0</td><td class="num">3</td><td class="num">0</td><td class="num">3</td><td class="num crit">0</td><td class="num crit">0</td></tr>
+          <tr><td>D</td><td class="num">4</td><td class="num">1</td><td class="num">5</td><td class="num">4</td><td class="num">8</td><td class="num slack">3</td><td class="num slack">2</td></tr>
+          <tr><td>E</td><td class="num">5</td><td class="num">2</td><td class="num">7</td><td class="num">3</td><td class="num">8</td><td class="num slack">1</td><td class="num">0</td></tr>
+          <tr><td>F</td><td class="num">6</td><td class="num">2</td><td class="num">8</td><td class="num">5</td><td class="num">11</td><td class="num slack">3</td><td class="num slack">3</td></tr>
+          <tr><td>G</td><td class="num">6</td><td class="num">3</td><td class="num">9</td><td class="num">3</td><td class="num">9</td><td class="num crit">0</td><td class="num crit">0</td></tr>
+          <tr><td>H</td><td class="num">3</td><td class="num">7</td><td class="num">10</td><td class="num">8</td><td class="num">11</td><td class="num slack">1</td><td class="num slack">1</td></tr>
+          <tr><td>I</td><td class="num">2</td><td class="num">9</td><td class="num">11</td><td class="num">9</td><td class="num">11</td><td class="num crit">0</td><td class="num crit">0</td></tr>
+          <tr><td>J</td><td class="num">3</td><td class="num">11</td><td class="num">14</td><td class="num">11</td><td class="num">14</td><td class="num crit">0</td><td class="num crit">0</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="callout tip">
+      <span class="lbl">Mẹo đọc bảng khi đi thi</span>
+      <p>Cột <strong>TF</strong> có màu cam = 0 chính là các công việc trên đường găng. Với các công việc còn lại, TF cho biết chúng có thể <strong>bắt đầu trễ tối đa bao nhiêu ngày</strong> mà dự án vẫn không trễ — ví dụ F có thể trễ tới 3 ngày.</p>
+    </div>
+  </section>
+
+  <hr class="rule">
+
+  <!-- ============ SECTION 5 ============ -->
+  <section id="luyen">
+    <p class="kicker">Phần 5 · Tự làm trước khi xem đáp án</p>
+    <h2>Bài luyện tập nhỏ</h2>
+    <p>Chỉ 4 công việc — dùng đúng 3 bước bạn vừa học ở Phần 3.</p>
+
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>Việc</th><th>Nội dung</th><th>Thời gian</th><th>Việc trước</th></tr></thead>
+        <tbody>
+          <tr><td>P</td><td>Giặt đồ</td><td class="num">3 giờ</td><td>–</td></tr>
+          <tr><td>Q</td><td>Nấu cơm</td><td class="num">1 giờ</td><td>–</td></tr>
+          <tr><td>R</td><td>Phơi đồ</td><td class="num">2 giờ</td><td>P</td></tr>
+          <tr><td>S</td><td>Ăn cơm</td><td class="num">1 giờ</td><td>Q, R</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <ul class="qlist">
+      <li>1. Sớm nhất mấy giờ thì được ăn cơm (tính từ giờ 0)?</li>
+      <li>2. Chuỗi công việc nào là "đường găng"?</li>
+      <li>3. Việc "nấu cơm" (Q) dư ra bao nhiêu giờ?</li>
+    </ul>
+
+    <details>
+      <summary>Xem đáp án và cách tính đầy đủ</summary>
+
+      <div class="diagram-wrap" style="margin-top:4px">
+        <svg viewBox="0 0 560 260" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <marker id="prN" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" style="fill:var(--ink-faint)"/></marker>
+            <marker id="prC" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" style="fill:var(--critical)"/></marker>
+          </defs>
+          <line x1="50" y1="150" x2="200" y2="60"  class="edge crit" marker-end="url(#prC)"/>
+          <line x1="50" y1="150" x2="200" y2="220" class="edge" marker-end="url(#prN)"/>
+          <line x1="200" y1="60" x2="360" y2="60"  class="edge crit" marker-end="url(#prC)"/>
+          <line x1="200" y1="220" x2="420" y2="150" class="edge dummy" marker-end="url(#prN)"/>
+          <line x1="360" y1="60" x2="420" y2="150" class="edge crit dummy" marker-end="url(#prC)"/>
+          <line x1="420" y1="150" x2="540" y2="150" class="edge crit" marker-end="url(#prC)"/>
+
+          <g><rect x="98" y="95" width="60" height="16" class="edge-label-bg"/><text x="128" y="107" text-anchor="middle" class="edge-label crit">P · 3h</text></g>
+          <g><rect x="98" y="192" width="60" height="16" class="edge-label-bg"/><text x="128" y="204" text-anchor="middle" class="edge-label">Q · 1h</text></g>
+          <g><rect x="248" y="44" width="60" height="16" class="edge-label-bg"/><text x="278" y="56" text-anchor="middle" class="edge-label crit">R · 2h</text></g>
+          <g><rect x="278" y="192" width="60" height="16" class="edge-label-bg"/><text x="308" y="204" text-anchor="middle" class="edge-label">chờ · 0</text></g>
+          <g><rect x="440" y="185" width="60" height="16" class="edge-label-bg"/><text x="470" y="197" text-anchor="middle" class="edge-label crit">S · 1h</text></g>
+
+          <circle cx="50" cy="150" r="22" class="node-ring crit"/>
+          <text x="50" y="156" text-anchor="middle" class="node-num" style="font-size:13px">1</text>
+          <text x="50" y="184" text-anchor="middle" class="node-stat">E0 · L0</text>
+
+          <circle cx="200" cy="60" r="22" class="node-ring crit"/>
+          <text x="200" y="66" text-anchor="middle" class="node-num" style="font-size:13px">2</text>
+          <text x="200" y="30" text-anchor="middle" class="node-label" style="font-size:11.5px">Giặt xong</text>
+          <text x="200" y="94" text-anchor="middle" class="node-stat">E3 · L3</text>
+
+          <circle cx="200" cy="220" r="22" class="node-ring"/>
+          <text x="200" y="226" text-anchor="middle" class="node-num" style="font-size:13px">3</text>
+          <text x="200" y="250" text-anchor="middle" class="node-label" style="font-size:11.5px">Cơm xong</text>
+          <text x="200" y="187" text-anchor="middle" class="node-stat">E1 · L5</text>
+
+          <circle cx="360" cy="60" r="22" class="node-ring crit"/>
+          <text x="360" y="66" text-anchor="middle" class="node-num" style="font-size:13px">4</text>
+          <text x="360" y="30" text-anchor="middle" class="node-label" style="font-size:11.5px">Phơi xong</text>
+          <text x="360" y="94" text-anchor="middle" class="node-stat">E5 · L5</text>
+
+          <circle cx="420" cy="150" r="22" class="node-ring crit"/>
+          <text x="420" y="156" text-anchor="middle" class="node-num" style="font-size:13px">5</text>
+          <text x="420" y="120" text-anchor="middle" class="node-label" style="font-size:11.5px">Sẵn sàng ăn</text>
+          <text x="420" y="184" text-anchor="middle" class="node-stat">E5 · L5</text>
+
+          <circle cx="540" cy="150" r="22" class="node-ring crit"/>
+          <text x="540" y="156" text-anchor="middle" class="node-num" style="font-size:13px">6</text>
+          <text x="540" y="184" text-anchor="middle" class="node-stat">E6 · L6</text>
+        </svg>
+      </div>
+
+      <div class="table-scroll">
+        <table>
+          <thead><tr><th>Sự kiện</th><th>E</th><th>L</th><th>S</th></tr></thead>
+          <tbody>
+            <tr><td>1 · Bắt đầu</td><td class="num">0</td><td class="num">0</td><td class="num crit">0</td></tr>
+            <tr><td>2 · Giặt xong</td><td class="num">3</td><td class="num">3</td><td class="num crit">0</td></tr>
+            <tr><td>3 · Cơm xong</td><td class="num">1</td><td class="num">5</td><td class="num slack">4</td></tr>
+            <tr><td>4 · Phơi xong</td><td class="num">5</td><td class="num">5</td><td class="num crit">0</td></tr>
+            <tr><td>5 · Sẵn sàng ăn</td><td class="num">5</td><td class="num">5</td><td class="num crit">0</td></tr>
+            <tr><td>6 · Ăn xong</td><td class="num">6</td><td class="num">6</td><td class="num crit">0</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p style="margin-top:14px"><strong>1.</strong> Sớm nhất <strong>6 giờ</strong> thì được ăn cơm.<br>
+      <strong>2.</strong> Đường găng: <strong>Giặt đồ (P) → Phơi đồ (R) → Ăn cơm (S)</strong> = 3+2+1 = 6 giờ. Nấu cơm (Q) không nằm trên đường găng.<br>
+      <strong>3.</strong> Nấu cơm dư ra <strong>4 giờ</strong> (TF<sub>Q</sub> = LS − ES = 4 − 0 = 4): vì dù sao bạn cũng phải chờ giặt + phơi đồ xong lúc giờ thứ 5, nên cơm có thể nấu xong bất cứ lúc nào trước đó cũng được.</p>
+    </details>
+  </section>
+
+  <footer>
+    Tài liệu tự học — tổng hợp từ Chương 3 &amp; 4, Giáo trình Quản lý dự án (NXB Tài chính). Dùng để ôn thi, không thay thế giáo trình gốc.
+  </footer>
+
+</div>

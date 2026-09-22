@@ -1,0 +1,453 @@
+<title>Thứ tự vẽ sơ đồ mạng</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script>
+(function(){
+  try{
+    var saved = localStorage.getItem("qlda-theme");
+    document.documentElement.dataset.theme = saved || "dark";
+  }catch(e){ document.documentElement.dataset.theme = "dark"; }
+  document.addEventListener("DOMContentLoaded", function(){
+    var btn = document.getElementById("themeBtn");
+    if(!btn) return;
+    function sync(){
+      var d = document.documentElement.dataset.theme === "dark";
+      btn.textContent = d ? "\u2600\uFE0F S\u00E1ng" : "\uD83C\uDF19 T\u1ED1i";
+      btn.setAttribute("aria-label", d ? "Chuy\u1EC3n sang giao di\u1EC7n s\u00E1ng" : "Chuy\u1EC3n sang giao di\u1EC7n t\u1ED1i");
+    }
+    btn.addEventListener("click", function(){
+      var next = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
+      document.documentElement.dataset.theme = next;
+      try{ localStorage.setItem("qlda-theme", next); }catch(e){}
+      sync();
+    });
+    sync();
+  });
+})();
+</script>
+<style>
+  :root{
+    --bg:#f6f7fb; --surface:#ffffff; --surface-2:#eef0fc;
+    --ink:#1c2033; --ink-soft:#585e78; --ink-faint:#8388a3; --border:#e1e3f0;
+    --accent:#4a3fd9; --accent-ink:#ffffff; --accent-soft:#ece9ff;
+    --critical:#c8401f; --critical-soft:#fbeae4;
+    --new:#a86400; --new-ink:#7a4900; --new-soft:#fff3d9;
+    --shadow:0 1px 2px rgba(28,32,51,.04),0 8px 24px rgba(28,32,51,.06);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#13141d; --surface:#1a1c28; --surface-2:#232640;
+      --ink:#eef0fb; --ink-soft:#a7acc7; --ink-faint:#767b98; --border:#2d3050;
+      --accent:#9b93ff; --accent-ink:#14152a; --accent-soft:#252a4d;
+      --critical:#ff8465; --critical-soft:#3a231d;
+      --new:#ffcf66; --new-ink:#ffe1a3; --new-soft:#3a2f12;
+      --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.35);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#13141d; --surface:#1a1c28; --surface-2:#232640;
+    --ink:#eef0fb; --ink-soft:#a7acc7; --ink-faint:#767b98; --border:#2d3050;
+    --accent:#9b93ff; --accent-ink:#14152a; --accent-soft:#252a4d;
+    --critical:#ff8465; --critical-soft:#3a231d;
+    --new:#ffcf66; --new-ink:#ffe1a3; --new-soft:#3a2f12;
+    --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.35);
+  }
+
+  body{background:var(--bg);color:var(--ink);font-family:"Be Vietnam Pro",system-ui,sans-serif;line-height:1.55;padding-inline:16px}
+  .wrap{max-width:980px;margin-inline:auto;padding-block:26px 56px}
+  .mono{font-family:"IBM Plex Mono",ui-monospace,monospace}
+  h1{font-size:clamp(1.4rem,4vw,1.9rem);font-weight:800;letter-spacing:-.01em;margin:6px 0 8px;text-wrap:balance}
+  h2{font-size:1.05rem;font-weight:800;margin:0 0 8px}
+  p{margin:0 0 10px;max-width:62ch}
+  .eyebrow{font-family:"IBM Plex Mono",monospace;font-size:.7rem;letter-spacing:.09em;text-transform:uppercase;color:var(--accent);font-weight:600;margin:0 0 8px}
+  .lede{color:var(--ink-soft);max-width:60ch}
+
+  .keytrick{background:var(--surface);border:1px solid var(--border);border-radius:16px;box-shadow:var(--shadow);padding:18px 20px;margin:18px 0 4px}
+  .keytrick h3{margin:0 0 10px;font-size:1rem;font-weight:800;color:var(--ink)}
+  .keytrick ol{margin:0;padding-left:20px;display:grid;gap:8px}
+  .keytrick li{font-size:.92rem;color:var(--ink-soft)}
+  .keytrick li strong{color:var(--ink)}
+  .keytrick .ex{margin-top:12px;padding:10px 13px;background:var(--new-soft);border-radius:10px;font-size:.88rem;color:var(--ink-soft)}
+  .keytrick .ex b{color:var(--new-ink)}
+
+  /* layout */
+  .stage{
+    display:grid;grid-template-columns:1.4fr 1fr;gap:18px;margin-top:22px;align-items:start;
+  }
+  @media (max-width:760px){ .stage{grid-template-columns:1fr} }
+
+  .panel{background:var(--surface);border:1px solid var(--border);border-radius:16px;box-shadow:var(--shadow)}
+  .diagram-panel{padding:10px 6px 14px}
+  .diagram-panel svg{display:block;width:100%;height:auto;min-width:520px}
+  .side-panel{padding:18px 20px;display:flex;flex-direction:column;gap:12px;min-height:320px}
+
+  .stepnum{font-family:"IBM Plex Mono",monospace;font-size:.76rem;color:var(--ink-faint);font-weight:600}
+  .tag{
+    display:inline-flex;align-self:flex-start;font-family:"IBM Plex Mono",monospace;font-size:.68rem;
+    font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:3px 9px;border-radius:999px;
+  }
+  .tag.rule{background:var(--accent-soft);color:var(--accent)}
+  .tag.tip{background:var(--surface-2);color:var(--ink-soft)}
+  .tag.done{background:var(--critical-soft);color:var(--critical)}
+  .side-panel h2{color:var(--ink)}
+  .side-panel .body{color:var(--ink-soft);font-size:.95rem}
+  .side-panel .body strong{color:var(--ink)}
+  .checklist{list-style:none;padding:0;margin:0;display:grid;gap:6px}
+  .checklist li{font-size:.9rem;color:var(--ink-soft);display:flex;gap:8px}
+  .checklist li::before{content:"✓";color:var(--critical);font-weight:800;flex:none}
+
+  .nav-row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:auto;padding-top:6px}
+  .btn{
+    font-family:"Be Vietnam Pro",sans-serif;font-weight:700;font-size:.86rem;
+    padding:9px 16px;border-radius:10px;border:1px solid var(--border);background:var(--surface);
+    color:var(--ink);cursor:pointer;
+  }
+  .btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+  .btn:disabled{opacity:.4;cursor:not-allowed}
+  .btn:focus-visible,.dot:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+  .dots{display:flex;gap:6px;justify-content:center}
+  .dot{
+    width:9px;height:9px;border-radius:50%;border:none;background:var(--border);cursor:pointer;padding:0;
+  }
+  .dot.active{background:var(--accent);width:22px;border-radius:6px;transition:width .15s}
+  .dot.passed{background:var(--accent-soft)}
+
+  .crit-toggle{display:flex;align-items:center;gap:8px;font-size:.86rem;color:var(--ink-soft);
+    background:var(--surface-2);border-radius:10px;padding:8px 12px;margin-top:4px}
+  .crit-toggle input{accent-color:var(--critical)}
+  .crit-toggle[hidden]{display:none}
+
+  /* reference table */
+  .ref-wrap{overflow-x:auto;margin-top:22px;border-radius:14px;border:1px solid var(--border);box-shadow:var(--shadow)}
+  table{border-collapse:collapse;width:100%;min-width:440px;background:var(--surface)}
+  caption{text-align:left;font-size:.8rem;color:var(--ink-faint);padding:10px 14px 0}
+  th,td{padding:8px 12px;border-bottom:1px solid var(--border);font-size:.88rem;text-align:center}
+  thead th{background:var(--surface-2);color:var(--ink-soft);font-weight:700;font-size:.74rem;text-transform:uppercase;letter-spacing:.03em}
+  th:first-child,td:first-child{text-align:left;font-weight:700}
+  td.num{font-family:"IBM Plex Mono",monospace}
+  tbody tr{transition:background .2s,opacity .2s}
+  tbody tr.active{background:var(--new-soft)}
+  tbody tr.active td:first-child{color:var(--new-ink)}
+  tbody tr.dim{opacity:.45}
+
+  /* svg elements */
+  .node-ring{fill:var(--surface);stroke:var(--accent);stroke-width:2.5}
+  .node-num{font-family:"IBM Plex Mono",monospace;font-weight:700;font-size:15px;fill:var(--ink)}
+  .node-label{font-family:"Be Vietnam Pro",sans-serif;font-size:12.5px;font-weight:600;fill:var(--ink)}
+  .node-stat{font-family:"IBM Plex Mono",monospace;font-size:11px;fill:var(--ink-faint)}
+  .edge{stroke:var(--ink-faint);stroke-width:2;fill:none}
+  .edge-label{font-family:"Be Vietnam Pro",sans-serif;font-size:12px;font-weight:600;fill:var(--ink-soft)}
+  .edge-label-bg{fill:var(--surface)}
+
+  .step-group{opacity:1;transition:opacity .25s}
+  .step-group.hidden-step{opacity:0;pointer-events:none}
+  .step-group.new .edge{stroke:var(--new);stroke-width:3.5}
+  .step-group.new .node-ring{stroke:var(--new);stroke-width:4}
+  .step-group.new .edge-label{fill:var(--new-ink);font-weight:800}
+  @media (prefers-reduced-motion:no-preference){
+    .step-group.new .edge{animation:pulse 1.3s ease-in-out infinite}
+  }
+  @keyframes pulse{0%,100%{stroke-width:3.5}50%{stroke-width:5}}
+
+  .crit-edge{stroke:var(--critical);stroke-width:3.5;opacity:0;transition:opacity .2s}
+  .crit-edge.show{opacity:1}
+
+  footer{margin-top:44px;padding-top:18px;border-top:1px solid var(--border);color:var(--ink-faint);font-size:.8rem}
+
+  /* theme toggle */
+  .theme-btn{
+    position:fixed;top:12px;right:14px;z-index:50;
+    font-family:"Be Vietnam Pro",system-ui,sans-serif;font-size:.78rem;font-weight:700;
+    padding:7px 13px;border-radius:999px;cursor:pointer;
+    background:var(--surface);color:var(--ink-soft);border:1px solid var(--border);
+    box-shadow:var(--shadow);
+  }
+  .theme-btn:hover{color:var(--ink);border-color:var(--accent)}
+  .theme-btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  @media print{ .theme-btn{display:none} }
+</style>
+
+<button id="themeBtn" class="theme-btn" type="button">☀️ Sáng</button>
+<div class="wrap">
+  <p class="eyebrow">Quản lý dự án · Đường-đi từng bước</p>
+  <h1>Vẽ sơ đồ mạng đúng thứ tự — và lý do vì sao</h1>
+  <p class="lede">Dùng lại đúng bài "Dự án X" (10 công việc) — bấm <strong>Tiếp</strong> để xem sơ đồ được dựng dần từng phần, mỗi bước kèm lý do bám theo đúng quy tắc lập sơ đồ mạng AOA.</p>
+
+  <div class="keytrick">
+    <h3>🔑 Mẹo duy nhất cần nhớ — hội tụ nằm trong bảng, không phải trong đầu bạn</h3>
+    <ol>
+      <li><strong>Ô "Việc trước" để trống (–)</strong> → việc đó xuất phát từ sự kiện 1. Không cần nghĩ thêm.</li>
+      <li><strong>Ô "Việc trước" có DẤU PHẨY (2 mục trở lên)</strong> → đây chính là điểm hội tụ. Các việc được liệt kê bắt buộc phải cùng đổ vào một sự kiện trước khi vẽ tiếp.</li>
+      <li><strong>Tên việc không xuất hiện ở bất kỳ ô "Việc trước" nào khác trong cả bảng</strong> → đó là việc cuối cùng, nối vào sự kiện kết thúc.</li>
+    </ol>
+    <div class="ex">Quét bảng bên dưới: chỉ có <b>đúng 2 ô</b> chứa dấu phẩy — hàng <b>H ("D, E")</b> và hàng <b>J ("F, H, I")</b>. Vậy cả sơ đồ chỉ có <strong>2 điểm hội tụ</strong>, không hơn — 8 bước dưới đây chỉ là làm đúng 3 điều trên theo thứ tự.</div>
+  </div>
+
+  <div class="stage">
+    <div class="panel diagram-panel">
+      <svg viewBox="0 0 740 460" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <marker id="arrN" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+            <path d="M0,0 L8,4 L0,8 z" style="fill:var(--ink-faint)"/>
+          </marker>
+        </defs>
+
+        <!-- STEP 1 -->
+        <g class="step-group" data-step="1">
+          <circle cx="50" cy="230" r="24" class="node-ring"/>
+          <text x="50" y="236" text-anchor="middle" class="node-num">1</text>
+          <text x="50" y="272" text-anchor="middle" class="node-label">Bắt đầu</text>
+          <text x="50" y="286" text-anchor="middle" class="node-stat">E=0 · L=0</text>
+        </g>
+
+        <!-- STEP 2: A, B, C -->
+        <g class="step-group" data-step="2">
+          <line x1="50" y1="230" x2="200" y2="90"  class="edge" marker-end="url(#arrN)"/>
+          <line x1="50" y1="230" x2="200" y2="230" class="edge" marker-end="url(#arrN)"/>
+          <line x1="50" y1="230" x2="200" y2="370" class="edge" marker-end="url(#arrN)"/>
+          <rect x="93" y="140" width="46" height="16" class="edge-label-bg"/><text x="116" y="152" text-anchor="middle" class="edge-label">A · 1</text>
+          <rect x="98" y="214" width="46" height="16" class="edge-label-bg"/><text x="121" y="226" text-anchor="middle" class="edge-label">B · 2</text>
+          <rect x="98" y="308" width="46" height="16" class="edge-label-bg"/><text x="121" y="320" text-anchor="middle" class="edge-label">C · 3</text>
+
+          <circle cx="200" cy="90" r="24" class="node-ring"/>
+          <text x="200" y="96" text-anchor="middle" class="node-num">2</text>
+          <text x="200" y="52" text-anchor="middle" class="node-label">Sau A</text>
+          <text x="200" y="66" text-anchor="middle" class="node-stat">E=1 · L=4</text>
+
+          <circle cx="200" cy="230" r="24" class="node-ring"/>
+          <text x="200" y="236" text-anchor="middle" class="node-num">3</text>
+          <text x="200" y="272" text-anchor="middle" class="node-label">Sau B</text>
+          <text x="200" y="286" text-anchor="middle" class="node-stat">E=2 · L=3</text>
+
+          <circle cx="200" cy="370" r="24" class="node-ring"/>
+          <text x="200" y="376" text-anchor="middle" class="node-num">4</text>
+          <text x="200" y="412" text-anchor="middle" class="node-label">Sau C</text>
+          <text x="200" y="426" text-anchor="middle" class="node-stat">E=3 · L=3</text>
+        </g>
+
+        <!-- STEP 3: D, G -->
+        <g class="step-group" data-step="3">
+          <line x1="200" y1="90"  x2="370" y2="160" class="edge" marker-end="url(#arrN)"/>
+          <line x1="200" y1="370" x2="370" y2="370" class="edge" marker-end="url(#arrN)"/>
+          <rect x="262" y="108" width="46" height="16" class="edge-label-bg"/><text x="285" y="120" text-anchor="middle" class="edge-label">D · 4</text>
+          <rect x="262" y="354" width="46" height="16" class="edge-label-bg"/><text x="285" y="366" text-anchor="middle" class="edge-label">G · 6</text>
+
+          <circle cx="370" cy="160" r="24" class="node-ring"/>
+          <text x="370" y="166" text-anchor="middle" class="node-num">5</text>
+          <text x="370" y="122" text-anchor="middle" class="node-label">Sau D, E</text>
+          <text x="370" y="136" text-anchor="middle" class="node-stat">E=7 · L=8</text>
+
+          <circle cx="370" cy="370" r="24" class="node-ring"/>
+          <text x="370" y="376" text-anchor="middle" class="node-num">6</text>
+          <text x="370" y="412" text-anchor="middle" class="node-label">Sau G</text>
+          <text x="370" y="426" text-anchor="middle" class="node-stat">E=9 · L=9</text>
+        </g>
+
+        <!-- STEP 4: E converges into node 5 -->
+        <g class="step-group" data-step="4">
+          <line x1="200" y1="230" x2="370" y2="160" class="edge" marker-end="url(#arrN)"/>
+          <rect x="262" y="198" width="46" height="16" class="edge-label-bg"/><text x="285" y="210" text-anchor="middle" class="edge-label">E · 5</text>
+        </g>
+
+        <!-- STEP 5: H, I -->
+        <g class="step-group" data-step="5">
+          <line x1="370" y1="160" x2="540" y2="260" class="edge" marker-end="url(#arrN)"/>
+          <line x1="370" y1="370" x2="540" y2="260" class="edge" marker-end="url(#arrN)"/>
+          <rect x="432" y="188" width="46" height="16" class="edge-label-bg"/><text x="455" y="200" text-anchor="middle" class="edge-label">H · 3</text>
+          <rect x="432" y="308" width="42" height="16" class="edge-label-bg"/><text x="453" y="320" text-anchor="middle" class="edge-label">I · 2</text>
+
+          <circle cx="540" cy="260" r="24" class="node-ring"/>
+          <text x="540" y="266" text-anchor="middle" class="node-num">7</text>
+          <text x="540" y="222" text-anchor="middle" class="node-label">Sau F, H, I</text>
+          <text x="540" y="236" text-anchor="middle" class="node-stat">E=11 · L=11</text>
+        </g>
+
+        <!-- STEP 6: F converges into node 7 -->
+        <g class="step-group" data-step="6">
+          <line x1="200" y1="230" x2="540" y2="260" class="edge" marker-end="url(#arrN)"/>
+          <rect x="345" y="230" width="46" height="16" class="edge-label-bg"/><text x="368" y="242" text-anchor="middle" class="edge-label">F · 6</text>
+        </g>
+
+        <!-- STEP 7: J -->
+        <g class="step-group" data-step="7">
+          <line x1="540" y1="260" x2="670" y2="260" class="edge" marker-end="url(#arrN)"/>
+          <rect x="580" y="230" width="42" height="16" class="edge-label-bg"/><text x="601" y="242" text-anchor="middle" class="edge-label">J · 3</text>
+
+          <circle cx="670" cy="260" r="24" class="node-ring"/>
+          <text x="670" y="266" text-anchor="middle" class="node-num">8</text>
+          <text x="670" y="302" text-anchor="middle" class="node-label">Kết thúc</text>
+          <text x="670" y="316" text-anchor="middle" class="node-stat">E=14 · L=14</text>
+        </g>
+
+        <!-- critical path overlay (toggle, step 8 only) -->
+        <g id="critOverlay">
+          <line x1="50" y1="230" x2="200" y2="370" class="crit-edge"/>
+          <line x1="200" y1="370" x2="370" y2="370" class="crit-edge"/>
+          <line x1="370" y1="370" x2="540" y2="260" class="crit-edge"/>
+          <line x1="540" y1="260" x2="670" y2="260" class="crit-edge"/>
+        </g>
+      </svg>
+    </div>
+
+    <div class="panel side-panel">
+      <span class="stepnum mono" id="stepnum">Bước 1 / 8</span>
+      <span class="tag" id="tag"></span>
+      <h2 id="title"></h2>
+      <div class="body" id="body"></div>
+      <ul class="checklist" id="checklist" hidden></ul>
+
+      <label class="crit-toggle" id="critToggleWrap" hidden>
+        <input type="checkbox" id="critToggle"> Hiện đường găng (C → G → I → J, 14 ngày)
+      </label>
+
+      <div class="nav-row">
+        <button class="btn" id="prevBtn" aria-label="Bước trước">◀ Trước</button>
+        <div class="dots" id="dots"></div>
+        <button class="btn primary" id="nextBtn" aria-label="Bước tiếp theo">Tiếp ▶</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="ref-wrap">
+    <table>
+      <caption>Bảng dữ liệu — dòng đang bàn tới ở bước hiện tại được tô sáng</caption>
+      <thead><tr><th>Việc</th><th>Việc trước</th><th>Thời gian</th></tr></thead>
+      <tbody id="refBody">
+        <tr data-act="A"><td>A</td><td>–</td><td class="num">1</td></tr>
+        <tr data-act="B"><td>B</td><td>–</td><td class="num">2</td></tr>
+        <tr data-act="C"><td>C</td><td>–</td><td class="num">3</td></tr>
+        <tr data-act="D"><td>D</td><td>A</td><td class="num">4</td></tr>
+        <tr data-act="E"><td>E</td><td>B</td><td class="num">5</td></tr>
+        <tr data-act="F"><td>F</td><td>B</td><td class="num">6</td></tr>
+        <tr data-act="G"><td>G</td><td>C</td><td class="num">6</td></tr>
+        <tr data-act="H"><td>H</td><td>D, E</td><td class="num">3</td></tr>
+        <tr data-act="I"><td>I</td><td>G</td><td class="num">2</td></tr>
+        <tr data-act="J"><td>J</td><td>F, H, I</td><td class="num">3</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <footer>Dùng phím ← → để chuyển bước. Trang này là phần "cách vẽ đúng thứ tự" — muốn ôn lại cách tính Ej/Lj/đường găng, xem lại trang trước đó.</footer>
+</div>
+
+<script>
+(function(){
+  var STEPS = [
+    { tag:'rule', tagText:'Quy tắc', title:'Bước 1 — Vẽ sự kiện 1 (điểm xuất phát)',
+      body:'Trước khi vẽ bất kỳ mũi tên nào, luôn tạo một sự kiện duy nhất làm điểm khởi đầu. Đây là nơi mọi công việc "trắng tay" — không có việc nào đứng trước — sẽ tỏa ra.',
+      acts:[] },
+    { tag:'rule', tagText:'Quy tắc', title:'Bước 2 — Tỏa 3 việc không có việc trước: A, B, C',
+      body:'Nhìn bảng: ô "Việc trước" của A, B, C đều để trống (–). Ba việc này không việc nào chờ việc nào, và lúc này chưa có việc nào khác dùng chung "điểm đến" với chúng — nên mỗi việc kết thúc tại <strong>một sự kiện riêng</strong> (2, 3, 4).',
+      acts:['A','B','C'] },
+    { tag:'tip', tagText:'Mẹo', title:'Bước 3 — Nối dài các nhánh đơn giản nhất trước: D và G',
+      body:'D chỉ cần một mình A xong, G chỉ cần một mình C xong — không có gì phức tạp, chỉ kéo dài mũi tên sang một sự kiện mới. Nên xử lý các nhánh "một-đối-một" như thế này trước, để dành các chỗ hội tụ phức tạp hơn cho bước sau.',
+      acts:['D','G'] },
+    { tag:'rule', tagText:'Quy tắc', title:'Bước 4 — E phải hội tụ đúng vào chỗ D vừa kết thúc',
+      body:'Xem bảng: H cần "D, E" — nghĩa là H chỉ bắt đầu được khi <strong>cả hai</strong> D và E cùng xong. Vì vậy mũi tên E <strong>không được tạo sự kiện kết thúc riêng</strong> — nó phải chĩa thẳng vào đúng sự kiện 5 mà D vừa tạo ra. Đây là lỗi hay gặp nhất: vẽ 2 sự kiện tách biệt cho D và E rồi không biết nối H từ đâu.',
+      acts:['E'] },
+    { tag:'tip', tagText:'Mẹo', title:'Bước 5 — Nối tiếp H và I, chuẩn bị điểm hội tụ cuối',
+      body:'H (từ sự kiện 5) và I (từ sự kiện 6) mỗi việc chỉ có một việc trước duy nhất, nên cứ kéo dài bình thường. Cả hai tạm thời dẫn về một sự kiện mới — vì bước sau sẽ cho thấy J cần đến cả hai.',
+      acts:['H','I'] },
+    { tag:'rule', tagText:'Quy tắc', title:'Bước 6 — F cũng phải hội tụ vào đúng sự kiện đó',
+      body:'Xem bảng: J cần "F, H, I" — cần đủ <strong>cả ba</strong> việc này xong. F chỉ phụ thuộc B (đã có sẵn ở sự kiện 3), nhưng đầu ra của nó <strong>không được tạo sự kiện riêng</strong> — phải chĩa thẳng vào đúng sự kiện mà H và I vừa hội tụ ở bước trước.',
+      acts:['F'] },
+    { tag:'rule', tagText:'Quy tắc', title:'Bước 7 — J: việc cuối cùng, dẫn tới sự kiện kết thúc',
+      body:'J là việc duy nhất trong cả bảng "không có việc nào đứng sau" — nên nó phải hội tụ tại <strong>sự kiện hoàn thành</strong>, khép lại toàn bộ sơ đồ.',
+      acts:['J'] },
+    { tag:'done', tagText:'Tổng kết', title:'Bước 8 — Kiểm tra lại toàn bộ sơ đồ',
+      body:'Trước khi coi là xong, luôn rà lại đúng các quy tắc sau:',
+      acts:[], checklist:[
+        'Sự kiện đánh số tăng dần trái → phải (1 đến 8), không trùng lặp.',
+        'Ở mọi mũi tên, đầu mang số LỚN hơn đuôi (ví dụ H: 5→7, không phải ngược lại).',
+        'Sự kiện hội tụ (5, 7) chỉ được đánh số SAU KHI mọi sự kiện đổ vào nó đã có số.',
+        'Không có đường cụt: mọi việc đều có việc kế tiếp, trừ J — dẫn thẳng đến sự kiện kết thúc.'
+      ] }
+  ];
+
+  var TOTAL = STEPS.length;
+  var step = 1;
+  try{
+    var saved = parseInt(localStorage.getItem('cpmDrawStep'),10);
+    if(saved>=1 && saved<=TOTAL) step = saved;
+  }catch(e){}
+
+  var groups = document.querySelectorAll('.step-group');
+  var rows = document.querySelectorAll('#refBody tr');
+  var dotsWrap = document.getElementById('dots');
+  for(var i=1;i<=TOTAL;i++){
+    var d = document.createElement('button');
+    d.className='dot'; d.type='button'; d.setAttribute('aria-label','Bước '+i);
+    d.dataset.i=i;
+    d.addEventListener('click', function(){ goTo(parseInt(this.dataset.i,10)); });
+    dotsWrap.appendChild(d);
+  }
+
+  function render(){
+    groups.forEach(function(g){
+      var s = parseInt(g.dataset.step,10);
+      g.classList.toggle('hidden-step', s>step);
+      g.classList.toggle('new', s===step);
+    });
+
+    var data = STEPS[step-1];
+    document.getElementById('stepnum').textContent = 'Bước '+step+' / '+TOTAL;
+    var tagEl = document.getElementById('tag');
+    tagEl.textContent = data.tagText;
+    tagEl.className = 'tag ' + data.tag;
+    document.getElementById('title').textContent = data.title;
+    document.getElementById('body').innerHTML = data.body;
+
+    var cl = document.getElementById('checklist');
+    if(data.checklist){
+      cl.hidden = false;
+      cl.innerHTML = data.checklist.map(function(t){return '<li>'+t+'</li>';}).join('');
+    } else {
+      cl.hidden = true; cl.innerHTML='';
+    }
+
+    document.getElementById('critToggleWrap').hidden = (step!==TOTAL);
+    if(step!==TOTAL){
+      document.getElementById('critToggle').checked = false;
+      document.getElementById('critOverlay').querySelectorAll('.crit-edge').forEach(function(l){l.classList.remove('show');});
+    }
+
+    rows.forEach(function(r){
+      var act = r.dataset.act;
+      var isActive = data.acts.indexOf(act) !== -1;
+      r.classList.toggle('active', isActive);
+      r.classList.toggle('dim', data.acts.length>0 && !isActive);
+    });
+
+    dotsWrap.querySelectorAll('.dot').forEach(function(d){
+      var i = parseInt(d.dataset.i,10);
+      d.classList.toggle('active', i===step);
+      d.classList.toggle('passed', i<step);
+    });
+
+    document.getElementById('prevBtn').disabled = (step===1);
+    document.getElementById('nextBtn').disabled = (step===TOTAL);
+
+    try{ localStorage.setItem('cpmDrawStep', step); }catch(e){}
+  }
+
+  function goTo(n){
+    if(n<1) n=1; if(n>TOTAL) n=TOTAL;
+    step = n; render();
+  }
+
+  document.getElementById('prevBtn').addEventListener('click', function(){ goTo(step-1); });
+  document.getElementById('nextBtn').addEventListener('click', function(){ goTo(step+1); });
+  document.getElementById('critToggle').addEventListener('change', function(e){
+    document.getElementById('critOverlay').querySelectorAll('.crit-edge').forEach(function(l){
+      l.classList.toggle('show', e.target.checked);
+    });
+  });
+  window.addEventListener('keydown', function(e){
+    if(e.key==='ArrowRight') goTo(step+1);
+    if(e.key==='ArrowLeft') goTo(step-1);
+  });
+
+  render();
+})();
+</script>
