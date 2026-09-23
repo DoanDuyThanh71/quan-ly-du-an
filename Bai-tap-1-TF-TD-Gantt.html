@@ -1,0 +1,597 @@
+<title>Bài tập 1: TF, TD và Gantt</title>
+<meta name="description" content="Giải Bài tập 1 chương 4 từng bước: đi xuôi, đi ngược, bảng 8 cột TF/TD, đường găng, biểu đồ Gantt sớm, muộn và điều chỉnh.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+  :root{
+    --bg:#f6f7fb; --surface:#ffffff; --surface-2:#eef0fc;
+    --ink:#1c2033; --ink-soft:#585e78; --ink-faint:#8388a3; --border:#e1e3f0; --grid:#eceef7;
+    --accent:#4a3fd9; --accent-ink:#ffffff; --accent-soft:#ece9ff;
+    --critical:#c8401f; --critical-soft:#fbeae4;
+    --new:#a86400; --new-ink:#7a4900; --new-soft:#fff3d9;
+    --good:#1f7a4d; --good-soft:#e3f4ea;
+    --shadow:0 1px 2px rgba(28,32,51,.04),0 8px 24px rgba(28,32,51,.06);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      color-scheme:dark;
+      --bg:#13141d; --surface:#1a1c28; --surface-2:#232640;
+      --ink:#eef0fb; --ink-soft:#a7acc7; --ink-faint:#767b98; --border:#2d3050; --grid:#23263a;
+      --accent:#9b93ff; --accent-ink:#14152a; --accent-soft:#252a4d;
+      --critical:#ff8465; --critical-soft:#3a231d;
+      --new:#ffcf66; --new-ink:#ffe1a3; --new-soft:#3a2f12;
+      --good:#6fd6a0; --good-soft:#18302a;
+      --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.35);
+    }
+  }
+  :root[data-theme="dark"]{
+    color-scheme:dark;
+    --bg:#13141d; --surface:#1a1c28; --surface-2:#232640;
+    --ink:#eef0fb; --ink-soft:#a7acc7; --ink-faint:#767b98; --border:#2d3050; --grid:#23263a;
+    --accent:#9b93ff; --accent-ink:#14152a; --accent-soft:#252a4d;
+    --critical:#ff8465; --critical-soft:#3a231d;
+    --new:#ffcf66; --new-ink:#ffe1a3; --new-soft:#3a2f12;
+    --good:#6fd6a0; --good-soft:#18302a;
+    --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.35);
+  }
+
+  *{box-sizing:border-box}
+  body{background:var(--bg);color:var(--ink);font-family:"Be Vietnam Pro",system-ui,sans-serif;line-height:1.55;padding-inline:16px}
+  .wrap{max-width:1120px;margin-inline:auto;padding-block:26px 56px}
+  h1{font-size:clamp(1.4rem,4vw,1.9rem);font-weight:800;letter-spacing:-.01em;margin:6px 0 8px;text-wrap:balance}
+  h2{font-size:1.1rem;font-weight:800;margin:0 0 10px;text-wrap:balance}
+  p{margin:0 0 10px;max-width:66ch}
+  .eyebrow{font-family:"IBM Plex Mono",monospace;font-size:.7rem;letter-spacing:.09em;text-transform:uppercase;color:var(--accent);font-weight:600;margin:0 0 6px}
+  .lede{color:var(--ink-soft);max-width:70ch}
+  .top{display:flex;justify-content:space-between;align-items:flex-start;gap:16px}
+  .theme-btn{flex:none;border:1px solid var(--border);background:var(--surface);color:var(--ink);border-radius:999px;padding:7px 12px;font:inherit;font-size:.85rem;cursor:pointer}
+  button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+  /* chapter chips: which part of the solution each step belongs to */
+  .chapters{display:flex;gap:6px;flex-wrap:wrap;margin:20px 0 14px}
+  .chap{border:1px solid var(--border);background:var(--surface);color:var(--ink-soft);border-radius:999px;padding:6px 12px;font:inherit;font-size:.8rem;font-weight:600;cursor:pointer}
+  .chap.on{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+
+  .stage{display:grid;grid-template-columns:1.5fr 1fr;gap:18px;align-items:start}
+  @media (max-width:900px){.stage{grid-template-columns:1fr}}
+  .stage>*,.grid2>*{min-width:0}
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:16px;box-shadow:var(--shadow)}
+  .canvas{padding:14px}
+  .viewbox{overflow-x:auto;-webkit-overflow-scrolling:touch;min-height:200px}
+  .viewbox svg{display:block;width:100%;min-width:680px;height:auto}
+  .legend{display:flex;flex-wrap:wrap;gap:6px 16px;margin:8px 4px 0;font-size:.78rem;color:var(--ink-soft)}
+  .legend span{display:inline-flex;align-items:center;gap:6px}
+  .legend i{display:inline-block;width:22px;height:0;border-top:2px solid var(--ink-soft)}
+  .legend i.c{border-top-width:3px;border-color:var(--critical)}
+  .legend i.bar{height:10px;border:none;border-radius:3px;background:var(--accent)}
+  .legend i.barc{height:10px;border:none;border-radius:3px;background:var(--critical)}
+  .legend i.sl{border-top:2px dotted var(--ink-faint)}
+
+  .controls{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:12px;padding-top:12px;border-top:1px solid var(--border)}
+  .btn{border:1px solid var(--border);background:var(--surface-2);color:var(--ink);border-radius:10px;padding:8px 14px;font:inherit;font-weight:700;font-size:.88rem;cursor:pointer}
+  .btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+  .btn:disabled{opacity:.4;cursor:default}
+  .counter{font-family:"IBM Plex Mono",monospace;font-size:.82rem;color:var(--ink-soft);margin-inline:4px;font-variant-numeric:tabular-nums}
+  .dots{display:flex;gap:5px;flex-wrap:wrap;margin-left:auto}
+  .dot{width:11px;height:11px;border-radius:50%;border:none;background:var(--border);cursor:pointer;padding:0}
+  .dot.done{background:var(--accent-soft);box-shadow:inset 0 0 0 1.5px var(--accent)}
+  .dot.on{background:var(--accent)}
+  .hint{font-size:.75rem;color:var(--ink-faint);margin-top:8px}
+
+  .panel{padding:18px 20px;display:grid;gap:14px}
+  .step-no{font-family:"IBM Plex Mono",monospace;font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);font-weight:600}
+  .panel h3{margin:2px 0 0;font-size:1.08rem;font-weight:800;text-wrap:balance}
+  .body{font-size:.93rem;color:var(--ink-soft)}
+  .body p{margin:0 0 8px}
+  .body b{color:var(--ink)}
+  .body .calc{font-family:"IBM Plex Mono",monospace;font-size:.83rem;background:var(--surface-2);border-radius:8px;padding:8px 10px;margin:6px 0 8px;color:var(--ink);line-height:1.75;font-variant-numeric:tabular-nums}
+  .body ul{margin:4px 0 8px;padding-left:18px;display:grid;gap:3px}
+  .body .key{background:var(--new-soft);border-radius:10px;padding:9px 12px;margin:8px 0;color:var(--ink)}
+  .body .key b{color:var(--new-ink)}
+  .rule{font-size:.84rem;border-radius:10px;padding:9px 12px;background:var(--accent-soft);color:var(--ink)}
+  .rule b{display:block;font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;font-family:"IBM Plex Mono",monospace;color:var(--accent);margin-bottom:2px}
+  .rule.warn{background:var(--new-soft)}
+  .rule.warn b{color:var(--new-ink)}
+
+  .tblwrap{overflow-x:auto}
+  table{border-collapse:collapse;width:100%;font-size:.84rem;font-variant-numeric:tabular-nums}
+  th,td{padding:6px 8px;text-align:left;border-bottom:1px solid var(--border);white-space:nowrap}
+  th{font-size:.7rem;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-faint);font-weight:600}
+  td.code{font-weight:800;font-family:"IBM Plex Mono",monospace}
+  tr.hl td{background:var(--accent-soft)}
+  tr.hl td.code{color:var(--accent)}
+  .succ{color:var(--new-ink)}
+  .tbl-cap{font-size:.72rem;color:var(--ink-faint);margin-top:6px}
+
+
+  /* problem statement card */
+  .de{padding:14px 18px;margin-top:18px}
+  .de-head{display:flex;align-items:baseline;gap:6px 14px;flex-wrap:wrap;margin-bottom:8px}
+  .de-head h2{margin:0}
+  .de-head span{font-size:.8rem;color:var(--ink-faint)}
+  table.de-tbl{font-size:.95rem}
+  table.de-tbl th{text-align:left;font-size:.72rem;padding-right:14px}
+  table.de-tbl td{text-align:center;font-family:"IBM Plex Mono",monospace;min-width:52px;padding:7px 6px;transition:background .2s}
+  table.de-tbl tr.r-code td{font-weight:800;font-size:1.02rem}
+  table.de-tbl tr.r-t td{font-weight:700}
+  table.de-tbl tr.r-succ td{color:var(--new-ink);font-size:.86rem}
+  table.de-tbl td.hl{background:var(--accent-soft);color:var(--accent)}
+  table.de-tbl tr.r-succ td.hl{color:var(--new-ink)}
+  .req{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.84rem;color:var(--ink-soft);margin-top:10px}
+  .req b{color:var(--ink)}
+
+  /* the 8-column table shown in the stage */
+  table.big{font-size:.95rem}
+  table.big th,table.big td{text-align:center;padding:8px 6px}
+  table.big th{line-height:1.3}
+  table.big th small{display:block;font-family:"IBM Plex Mono",monospace;text-transform:none;letter-spacing:0;color:var(--accent);font-size:.7rem}
+  table.big td{font-family:"IBM Plex Mono",monospace}
+  table.big td .sub{font-size:.7rem;color:var(--ink-faint);margin-left:3px}
+  table.big tr.crit td{color:var(--critical);font-weight:700}
+  table.big td.pos{background:var(--new-soft);color:var(--new-ink);font-weight:700}
+  table.big tr.focus td{box-shadow:inset 0 2px 0 var(--new),inset 0 -2px 0 var(--new)}
+  table.big td.ghost{color:var(--ink-faint)}
+
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:26px}
+  @media (max-width:900px){.grid2{grid-template-columns:1fr}}
+  .sec{padding:18px 20px}
+  .sec ul{margin:0;padding-left:18px;display:grid;gap:6px;font-size:.9rem;color:var(--ink-soft)}
+  .sec li b{color:var(--ink)}
+  .formula{font-family:"IBM Plex Mono",monospace;font-size:.86rem;background:var(--surface-2);border-radius:8px;padding:10px 12px;line-height:1.8;margin-bottom:10px}
+
+  /* SVG */
+  svg text{font-family:"Be Vietnam Pro",system-ui,sans-serif}
+  .arr .line{fill:none;stroke:var(--ink-soft);stroke-width:2}
+  .arr .head{fill:var(--ink-soft)}
+  .arr.crit .line{stroke:var(--critical);stroke-width:3}
+  .arr.crit .head{fill:var(--critical)}
+  .node rect.box{fill:var(--surface);stroke:var(--ink-soft);stroke-width:2}
+  .node.crit rect.box{stroke:var(--critical);stroke-width:3}
+  .node.focus rect.box{stroke:var(--new);stroke-width:3}
+  .node .sep{stroke:var(--border);stroke-width:1.2}
+  .node .name{font-size:19px;font-weight:800;text-anchor:middle;fill:var(--ink)}
+  .node.crit .name{fill:var(--critical)}
+  .node .cell{font-family:"IBM Plex Mono",monospace;font-size:17px;font-weight:700;text-anchor:middle;fill:var(--ink)}
+  .node .cell.ph{font-size:11px;font-weight:500;fill:var(--ink-faint)}
+  .node .cell.es{fill:var(--accent)}
+  .node .cell.lf{fill:var(--new)}
+  .node .cell.tf{fill:var(--ink-soft)}
+  .node.crit .cell.tf{fill:var(--critical)}
+  .tag{font-family:"IBM Plex Mono",monospace;font-size:13px;fill:var(--ink-faint)}
+
+  .g-grid{stroke:var(--grid);stroke-width:1}
+  .g-grid.major{stroke:var(--border)}
+  .g-axis{font-family:"IBM Plex Mono",monospace;font-size:10.5px;fill:var(--ink-faint);text-anchor:middle}
+  .g-row{font-family:"IBM Plex Mono",monospace;font-size:13px;font-weight:700;fill:var(--ink)}
+  .g-row.crit{fill:var(--critical)}
+  .g-rowlbl{font-size:11px;font-weight:600;fill:var(--ink-soft)}
+  .g-rowlbl.crit{fill:var(--critical)}
+  .bar{fill:var(--accent)}
+  .bar.crit{fill:var(--critical)}
+  .bar-txt{font-size:11.5px;font-weight:700;fill:var(--surface);text-anchor:middle;pointer-events:none}
+  .slack{stroke:var(--ink-faint);stroke-width:2;stroke-dasharray:2 4;stroke-linecap:round;fill:none}
+  .slack-end{stroke:var(--ink-faint);stroke-width:2}
+  .slack-lbl{font-family:"IBM Plex Mono",monospace;font-size:10.5px;fill:var(--ink-soft)}
+  .link{stroke:var(--ink-soft);stroke-width:1.4;fill:none}
+  .link-head{fill:var(--ink-soft)}
+  .tline{stroke:var(--critical);stroke-width:1.5;stroke-dasharray:4 3}
+  .tline-lbl{font-family:"IBM Plex Mono",monospace;font-size:11px;font-weight:600;fill:var(--critical)}
+
+  @keyframes draw{from{stroke-dashoffset:1}to{stroke-dashoffset:0}}
+  @keyframes fade{from{opacity:0}to{opacity:1}}
+  @keyframes pop{0%{opacity:0;transform:scale(.4)}100%{opacity:1;transform:scale(1)}}
+  @keyframes valpop{0%{opacity:0;transform:translateY(-6px) scale(1.6)}100%{opacity:1;transform:none}}
+  @keyframes grow{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+  @keyframes cellin{0%{opacity:0;background:var(--new-soft)}100%{opacity:1}}
+  .anim-draw{stroke-dasharray:1;animation:draw .7s ease-out both;animation-delay:var(--d,0s)}
+  .anim-fade{animation:fade .45s ease-out both;animation-delay:var(--d,0s)}
+  .anim-pop{transform-box:fill-box;transform-origin:center;animation:pop .45s cubic-bezier(.2,.9,.3,1.25) both;animation-delay:var(--d,0s)}
+  .anim-val{transform-box:fill-box;transform-origin:center;animation:valpop .55s ease-out both;animation-delay:var(--d,0s)}
+  .anim-grow{transform-box:fill-box;transform-origin:left center;animation:grow .55s ease-out both;animation-delay:var(--d,0s)}
+  .anim-cell{animation:cellin .6s ease-out both;animation-delay:var(--d,0s)}
+  @media (prefers-reduced-motion: reduce){
+    .anim-draw,.anim-fade,.anim-pop,.anim-val,.anim-grow,.anim-cell{animation:none}
+  }
+</style>
+
+<div class="wrap">
+  <div class="top">
+    <div>
+      <p class="eyebrow">Chương 4 · Bài tập 1 (slide Gantt)</p>
+      <h1>Bài tập 1: TF, TD và Gantt</h1>
+      <p class="lede">10 công việc, đơn vị <b>giờ</b>. Nên tự làm ra giấy trước rồi mới bấm <b>Tiếp</b> để đối chiếu từng bước: đi xuôi, đi ngược, bảng 8 cột, đường găng, rồi ba kiểu biểu đồ Gantt.</p>
+    </div>
+    <button class="theme-btn" id="themeBtn" type="button" aria-label="Đổi giao diện sáng/tối">◐ Giao diện</button>
+  </div>
+
+  <section class="card de" aria-labelledby="deTitle">
+    <div class="de-head">
+      <h2 id="deTitle">Đề bài</h2>
+      <span>Bài tập 1 · slide chương 4 · thời gian tính bằng giờ</span>
+    </div>
+    <div class="tblwrap"><table class="de-tbl" id="prob"></table></div>
+    <div class="req">
+      <b>Yêu cầu</b> (slide chỉ cho bảng, đây là các ý đề hay hỏi):
+      <span>1. Vẽ sơ đồ mạng</span><span>2. Tính ES, EF, LS, LF</span><span>3. Tính TF, TD</span><span>4. Xác định đường găng, T<sub>da</sub></span><span>5. Vẽ Gantt sớm, muộn</span>
+    </div>
+  </section>
+
+  <div class="chapters" id="chapters"></div>
+
+  <div class="stage">
+    <div class="card canvas">
+      <div class="viewbox" id="view"></div>
+      <div class="legend" id="legend"></div>
+      <div class="controls">
+        <button class="btn" id="prev" type="button">← Trước</button>
+        <button class="btn primary" id="next" type="button">Tiếp →</button>
+        <button class="btn" id="play" type="button">▶ Tự chạy</button>
+        <span class="counter" id="counter"></span>
+        <div class="dots" id="dots"></div>
+      </div>
+      <p class="hint">Phím ← → để chuyển bước · bấm chấm tròn hoặc tên phần ở trên để nhảy tới</p>
+    </div>
+
+    <div class="card panel">
+      <div>
+        <div class="step-no" id="stepNo"></div>
+        <h3 id="stepTitle"></h3>
+      </div>
+      <div class="body" id="stepBody"></div>
+      <div class="rule" id="stepRule"></div>
+    </div>
+  </div>
+
+  <div class="grid2">
+    <section class="card sec">
+      <h2>Công thức cần thuộc</h2>
+      <div class="formula">
+        Đi xuôi: ES = max(EF việc trước) · EF = ES + t<br>
+        Đi ngược: LF = min(LS việc sau) · LS = LF − t<br>
+        TF = LS − ES = LF − EF<br>
+        TD = min(ES việc ngay sau) − EF
+      </div>
+      <ul>
+        <li><b>Luôn có TD ≤ TF.</b> Nếu tính ra TD &gt; TF là sai ở đâu đó.</li>
+        <li><b>TF = 0 thì TD = 0.</b> Việc găng không có dự trữ nào cả.</li>
+        <li>Việc cuối cùng (J) tính TD bằng T<sub>da</sub> − EF.</li>
+        <li>Kiểm tra nhanh: tổng t trên đường găng phải bằng T<sub>da</sub>.</li>
+      </ul>
+    </section>
+    <section class="card sec">
+      <h2>TF và TD khác nhau thế nào</h2>
+      <ul>
+        <li><b>TF (toàn phần):</b> việc được chậm bao nhiêu mà <b>dự án</b> vẫn xong đúng hạn.</li>
+        <li><b>TD (tự do):</b> việc được chậm bao nhiêu mà <b>việc ngay sau</b> vẫn bắt đầu sớm như cũ.</li>
+        <li>Nhiều việc nối tiếp trên cùng một nhánh <b>dùng chung</b> TF. Trong bài này C và F cùng có TF = 11, nhưng chỉ F có TD = 11. C chậm thì F bị đẩy lùi theo.</li>
+        <li>Câu nhận xét hay được hỏi: “Việc nào cần giám sát?” Đó là các việc găng A, E, H, I, J. Tiếp theo là D, G vì dự trữ chỉ 5 giờ.</li>
+      </ul>
+    </section>
+  </div>
+</div>
+
+<script>
+(function(){
+  const NS='http://www.w3.org/2000/svg';
+  const $=id=>document.getElementById(id);
+  function el(tag,attrs,parent){const e=document.createElementNS(NS,tag);if(attrs)for(const k in attrs)e.setAttribute(k,attrs[k]);if(parent)parent.appendChild(e);return e}
+  function txt(parent,x,y,s,cls,extra){const t=el('text',Object.assign({x,y,class:cls||''},extra||{}),parent);t.textContent=s;return t}
+  function anim(node,cls,delay){node.classList.add(cls);node.style.setProperty('--d',(delay||0)+'s')}
+
+  /* ---------- problem data; every time value is computed, not typed ---------- */
+  const RAW=[['A','',4],['B','',5],['C','A',3],['D','A',6],['E','A',8],['F','C',2],['G','D',5],['H','B,E',3],['I','H',5],['J','F,G,I',8]];
+  const T={};const ORDER=RAW.map(r=>r[0]);
+  RAW.forEach(([c,p,t],i)=>{T[c]={c,t,pre:p?p.split(','):[],succ:[],i}});
+  ORDER.forEach(c=>T[c].pre.forEach(p=>T[p].succ.push(c)));
+  ORDER.forEach(c=>{const x=T[c];x.ES=x.pre.length?Math.max(...x.pre.map(p=>T[p].EF)):0;x.EF=x.ES+x.t});
+  const TDA=Math.max(...ORDER.map(c=>T[c].EF));
+  [...ORDER].reverse().forEach(c=>{const x=T[c];x.LF=x.succ.length?Math.min(...x.succ.map(s=>T[s].LS)):TDA;x.LS=x.LF-x.t});
+  ORDER.forEach(c=>{const x=T[c];x.TF=x.LS-x.ES;x.minES=x.succ.length?Math.min(...x.succ.map(s=>T[s].ES)):TDA;x.TD=x.minES-x.EF;x.crit=x.TF===0});
+
+  // horizontal problem table at the top; one column per task
+  const rowsDef=[['r-code','Công việc',x=>x.c],['r-pre','Công việc trước',x=>x.pre.join(',')||'–'],['r-t','Thời gian (giờ)',x=>x.t],['r-succ','Việc sau*',x=>x.succ.join(',')||'–']];
+  $('prob').innerHTML='<tbody>'+rowsDef.map(([cls,h,f])=>`<tr class="${cls}"><th scope="row">${h}</th>`+ORDER.map(c=>`<td data-c="${c}">${f(T[c])}</td>`).join('')+'</tr>').join('')+
+    '</tbody><caption style="caption-side:bottom;text-align:left;font-size:.72rem;color:var(--ink-faint);padding-top:6px">*hàng “Việc sau” tự suy ra từ hàng “Công việc trước”, đề không cho sẵn</caption>';
+
+  /* ---------- generic straight arrow ---------- */
+  function arrow(g,a,b,crit,isNew,delay){
+    const dx=b.x-a.x,dy=b.y-a.y,L=Math.hypot(dx,dy),ux=dx/L,uy=dy/L;
+    const grp=el('g',{class:'arr'+(crit?' crit':'')},g);
+    const ex=b.x-ux,ey=b.y-uy;
+    const p=el('path',{d:`M${a.x} ${a.y} L${ex} ${ey}`,class:'line',pathLength:'1'},grp);
+    const hl=10,hw=5,bx=ex-ux*hl,by=ey-uy*hl;
+    const h=el('path',{class:'head',d:`M${ex} ${ey} L${bx+uy*hw} ${by-ux*hw} L${bx-uy*hw} ${by+ux*hw} Z`},grp);
+    if(isNew){anim(p,'anim-draw',delay);anim(h,'anim-fade',delay+.55)}
+  }
+
+  /* ================= AON network view ================= */
+  const W=120,H=86;
+  const POS={A:[75,130],B:[75,410],C:[265,55],D:[265,180],E:[265,295],F:[455,55],G:[455,180],H:[455,305],I:[645,305],J:[830,180]};
+  const ENDY={'B>H':15,'E>H':-8,'F>J':-18,'I>J':18};
+  // opts: vals = 0 none, 1 ES/EF, 2 +LS/LF, 3 +TF ; animate = which level is new ; crit ; focus
+  function renderNet(view,o){
+    const svg=el('svg',{viewBox:'0 0 910 480',role:'img','aria-label':'Sơ đồ AON của Bài tập 1'},view);
+    const ga=el('g',{},svg),gn=el('g',{},svg);
+    ORDER.forEach(c=>T[c].succ.forEach(s=>{
+      const a=POS[c],b=POS[s];
+      arrow(ga,{x:a[0]+W/2,y:a[1]},{x:b[0]-W/2,y:b[1]+(ENDY[c+'>'+s]||0)},o.crit&&T[c].crit&&T[s].crit,o.drawNew,o.drawNew?.1*T[c].i:0);
+    }));
+    ORDER.forEach(c=>{
+      const x=T[c],[cx0,cy]=POS[c];
+      const g=el('g',{class:'node'+(o.crit&&x.crit?' crit':'')+(o.focus&&o.focus.includes(c)?' focus':'')},gn);
+      const x0=cx0-W/2,y0=cy-H/2,cw=W/3;
+      el('rect',{x:x0,y:y0,width:W,height:H,rx:8,class:'box'},g);
+      el('line',{x1:x0,y1:cy-14,x2:x0+W,y2:cy-14,class:'sep'},g);
+      el('line',{x1:x0,y1:cy+14,x2:x0+W,y2:cy+14,class:'sep'},g);
+      [1,2].forEach(i=>{
+        el('line',{x1:x0+cw*i,y1:y0,x2:x0+cw*i,y2:cy-14,class:'sep'},g);
+        el('line',{x1:x0+cw*i,y1:cy+14,x2:x0+cw*i,y2:y0+H,class:'sep'},g);
+      });
+      txt(g,cx0,cy+7,c,'name');
+      const cxs=[x0+cw/2,cx0,x0+cw*2.5],ty=cy-23,by=cy+35;
+      txt(g,cxs[1],ty,x.t,'cell');
+      const fw=.2+.28*x.i,bw=.2+.28*(9-x.i);
+      const put=(px,py,val,ph,cls,lvl,delay)=>{
+        if(o.vals>=lvl){const t=txt(g,px,py,val,'cell '+cls);if(o.animate===lvl)anim(t,'anim-val',delay)}
+        else txt(g,px,py-1,ph,'cell ph');
+      };
+      put(cxs[0],ty,x.ES,'ES','es',1,fw);
+      put(cxs[2],ty,x.EF,'EF','es',1,fw+.12);
+      put(cxs[2],by,x.LF,'LF','lf',2,bw);
+      put(cxs[0],by,x.LS,'LS','lf',2,bw+.12);
+      put(cxs[1],by,x.TF,'TF','tf',3,.15+.1*x.i);
+      if(o.drawNew)anim(g,'anim-pop',.1*x.i);
+    });
+    txt(gn,20,474,'Ô: ES | t | EF  ·  tên việc  ·  LS | TF | LF','tag');
+  }
+
+  /* ================= 8-column table view ================= */
+  function renderTable(view,o){
+    const cols=[
+      {h:'CV',n:'1',f:x=>x.c},
+      {h:'T<sub>a</sub>',n:'2',f:x=>x.t},
+      {h:'LS',n:'3',f:x=>x.LS},
+      {h:'ES',n:'4',f:x=>x.ES},
+      {h:'TF',n:'5 = 3 − 4',f:x=>x.TF,pos:1},
+      {h:'Min ES sau',n:'6',f:x=>x.minES+`<span class="sub">${x.succ.length?x.succ.join(','):'T<sub>da</sub>'}</span>`},
+      {h:'EF',n:'7 = 2 + 4',f:x=>x.EF},
+      {h:'TD',n:'8 = 6 − 7',f:x=>x.TD,pos:1}
+    ];
+    const shown=o.cols;
+    let html='<div class="tblwrap"><table class="big"><thead><tr>';
+    cols.forEach((c,i)=>{html+=`<th>${c.h}<small>(${c.n})</small></th>`});
+    html+='</tr></thead><tbody>';
+    ORDER.forEach(cc=>{
+      const x=T[cc];
+      const cls=[(o.crit&&x.crit)?'crit':'',(o.focus&&o.focus.includes(cc))?'focus':''].join(' ');
+      html+=`<tr class="${cls}">`;
+      cols.forEach((c,i)=>{
+        if(i>=shown){html+='<td class="ghost">·</td>';return}
+        const isNew=o.newFrom!=null&&i>=o.newFrom;
+        const pos=c.pos&&x[c.h==='TF'?'TF':'TD']>0;
+        const st=isNew?` style="--d:${(.06*x.i+.12*(i-o.newFrom)).toFixed(2)}s"`:'';
+        html+=`<td class="${pos?'pos ':''}${isNew?'anim-cell':''}"${st}>${c.f(x)}</td>`;
+      });
+      html+='</tr>';
+    });
+    html+='</tbody></table></div>';
+    view.innerHTML=html;
+  }
+
+  /* ================= Gantt views ================= */
+  const X0=64,K=24;
+  const gx=h=>X0+h*K;
+  function ganttFrame(svg,top,rowsH){
+    for(let h=0;h<=TDA;h++){
+      el('line',{x1:gx(h),y1:top-6,x2:gx(h),y2:top+rowsH,class:'g-grid'+(h%4===0?' major':'')},svg);
+      if(h%2===0)txt(svg,gx(h),top-12,h,'g-axis');
+    }
+    txt(svg,X0-8,top-12,'giờ','g-axis',{'text-anchor':'end'});
+    el('line',{x1:gx(TDA),y1:top-6,x2:gx(TDA),y2:top+rowsH,class:'tline'},svg);
+  }
+  function bar(svg,x,y,h,task,delay,withLabel){
+    const w=task.t*K;
+    const r=el('rect',{x:gx(x),y,width:w,height:h,rx:4,class:'bar'+(task.crit?' crit':'')},svg);
+    anim(r,'anim-grow',delay);
+    if(withLabel!==false){const t=txt(svg,gx(x)+w/2,y+h/2+4,task.c+' · '+task.t,'bar-txt');anim(t,'anim-fade',delay+.4)}
+  }
+  function slack(svg,from,to,y,label,delay,endTick){
+    if(to<=from)return;
+    const l=el('line',{x1:gx(from)+3,y1:y,x2:gx(to),y2:y,class:'slack'},svg);anim(l,'anim-fade',delay);
+    if(endTick!==false){const e=el('line',{x1:gx(to),y1:y-5,x2:gx(to),y2:y+5,class:'slack-end'},svg);anim(e,'anim-fade',delay)}
+    if(label){const t=txt(svg,(gx(from)+gx(to))/2,y-5,label,'slack-lbl',{'text-anchor':'middle'});anim(t,'anim-fade',delay+.1)}
+  }
+
+  function renderGantt(view,mode){
+    if(mode==='adj')return renderGanttAdj(view);
+    const top=40,rh=30,bh=18,rowsH=ORDER.length*rh+4;
+    const svg=el('svg',{viewBox:`0 0 ${gx(TDA)+48} ${top+rowsH+10}`,role:'img','aria-label':'Biểu đồ Gantt'},view);
+    ganttFrame(svg,top,rowsH);
+    ORDER.forEach((c,i)=>{
+      const x=T[c],y=top+i*rh+6;
+      txt(svg,14,y+bh/2+5,c,'g-row'+(x.crit?' crit':''));
+      const start=mode==='early'?x.ES:x.LS;
+      const d=.05*start;
+      bar(svg,start,y,bh,x,d);
+      if(x.TF>0){
+        if(mode==='early')slack(svg,x.EF,x.LF,y+bh/2,'TF '+x.TF,d+.5);
+        else slack(svg,x.ES,x.LS,y+bh/2,'sớm được '+x.TF,d+.5);
+      }
+    });
+    txt(svg,gx(TDA),top-26,'T = 28','tline-lbl',{'text-anchor':'middle'});
+  }
+
+  function renderGanttAdj(view){
+    const rows=[{lbl:'Găng',tasks:['A','E','H','I','J'],crit:1},{lbl:'C → F',tasks:['C','F']},{lbl:'D → G',tasks:['D','G']},{lbl:'B',tasks:['B']}];
+    const top=40,rh=58,bh=22,rowsH=rows.length*rh;
+    const svg=el('svg',{viewBox:`0 0 ${gx(TDA)+48} ${top+rowsH+10}`,role:'img','aria-label':'Biểu đồ Gantt điều chỉnh'},view);
+    ganttFrame(svg,top,rowsH);
+    const rowY=i=>top+i*rh+18;
+    rows.forEach((r,i)=>{
+      const y=rowY(i);
+      txt(svg,8,y+bh/2+4,r.lbl,'g-rowlbl'+(r.crit?' crit':''));
+      r.tasks.forEach(c=>bar(svg,T[c].ES,y,bh,T[c],.05*T[c].ES+.1*i));
+      // slack of the branch runs from its last EF to where it joins the critical row
+      const last=T[r.tasks[r.tasks.length-1]];
+      if(!r.crit){
+        const join=last.minES,cy=y+bh/2,d=.8+.1*i;
+        slack(svg,last.EF,join,cy,'dự trữ '+(join-last.EF),d,false);
+        // vertical link up into the critical row
+        const x=gx(join),y1=cy,y2=rowY(0)+bh+2;
+        const l=el('path',{d:`M${x} ${y1} L${x} ${y2+8}`,class:'link'},svg);anim(l,'anim-fade',d+.3);
+        const h=el('path',{d:`M${x} ${y2} L${x-4.5} ${y2+9} L${x+4.5} ${y2+9} Z`,class:'link-head'},svg);anim(h,'anim-fade',d+.3);
+      }
+    });
+    // branch starts after A (hour 4): links from the critical row down to C and D rows
+    [1,2].forEach(i=>{
+      const x=gx(4)+1,y1=rowY(0)+bh,y2=rowY(i);
+      const l=el('path',{d:`M${x} ${y1} L${x} ${y2-8}`,class:'link'},svg);anim(l,'anim-fade',.5);
+      const h=el('path',{d:`M${x} ${y2} L${x-4.5} ${y2-9} L${x+4.5} ${y2-9} Z`,class:'link-head'},svg);anim(h,'anim-fade',.5);
+    });
+    txt(svg,gx(TDA),top-26,'T = 28','tline-lbl',{'text-anchor':'middle'});
+  }
+
+  /* ================= steps ================= */
+  const L_NET='<span><i></i>quan hệ trước – sau</span><span><i class="c"></i>đường găng</span>';
+  const L_GANTT='<span><i class="barc"></i>việc găng</span><span><i class="bar"></i>việc không găng</span><span><i class="sl"></i>dự trữ</span>';
+  const CH=['Sơ đồ','Đi xuôi','Đi ngược','Bảng TF','Bảng TD','Đường găng','Gantt sớm','Gantt muộn','Gantt điều chỉnh','Nhận xét'];
+
+  const STEPS=[
+    {v:'net',o:{vals:0,drawNew:true},rows:['H','J'],legend:L_NET,
+     t:'Đề bài và sơ đồ AON',
+     b:`<p>Anh đã vẽ được sơ đồ nên đây chỉ là nền để tính. Có hai chỗ cần để ý:</p>
+        <ul><li><b>H</b> có hai việc trước là B và E, nên khi đi xuôi phải lấy max.</li>
+        <li><b>J</b> có ba việc trước là F, G và I.</li>
+        <li><b>A</b> có ba việc sau là C, D và E, nên khi đi ngược phải lấy min.</li></ul>`,
+     r:'Nhiều mũi tên đi vào: lấy MAX khi đi xuôi · nhiều mũi tên đi ra: lấy MIN khi đi ngược'},
+    {v:'net',o:{vals:1,animate:1},rows:ORDER,legend:L_NET,
+     t:'Đi xuôi: ES và EF',
+     b:`<p>A, B không có việc trước nên ES = 0. EF = ES + t. ES của việc sau = <b>max EF của các việc trước</b>:</p>
+        <div class="calc">A 0→4 · B 0→5<br>C 4→7 · D 4→10 · E 4→12<br>F 7→9 · G 10→15<br>H: max(5, 12) = 12 → 15<br>I 15→20<br>J: max(9, 15, 20) = 20 → 28</div>
+        <p><b>T<sub>da</sub> = 28 giờ.</b></p>`,
+     r:'ES = Max(EF các việc trước) · EF = ES + t'},
+    {v:'net',o:{vals:2,animate:2},rows:ORDER,legend:L_NET,focus:['A'],
+     t:'Đi ngược: LF và LS',
+     b:`<p>Việc cuối có LF = T<sub>da</sub> = 28. LS = LF − t. LF của việc trước = <b>min LS của các việc sau</b>:</p>
+        <div class="calc">J 28→20<br>F 20→18 · G 20→15 · I 20→15<br>H 15→12<br>C 18→15 · D 15→9 · E 12→4<br>B 12→7<br>A: min(15, 9, 4) = 4 → 0</div>
+        <div class="key"><b>Chỗ hay sai:</b> A có ba việc sau. Lấy nhầm max(15, 9, 4) = 15 thì LS<sub>A</sub> = 11, sai cả bảng. Kiểm tra: việc đầu tiên trên đường găng luôn có LS = 0.</div>`,
+     r:'LF = Min(LS các việc sau) · LS = LF − t'},
+    {v:'table',o:{cols:5,newFrom:2},rows:ORDER,
+     t:'Bảng 8 cột: cột 1 → 5 (TF)',
+     b:`<p>Chép LS, ES từ sơ đồ sang bảng rồi tính cột 5: <b>TF = LS − ES</b>.</p>
+        <div class="calc">B 7−0 = 7<br>C 15−4 = 11<br>D 9−4 = 5<br>F 18−7 = 11<br>G 15−10 = 5<br>A, E, H, I, J: 0</div>
+        <p>Ô tô vàng là việc có dự trữ.</p>`,
+     r:'TF = LS − ES (hoặc LF − EF, ra cùng kết quả)'},
+    {v:'table',o:{cols:8,newFrom:5,focus:['C','F']},rows:['C','F'],
+     t:'Bảng 8 cột: cột 6 → 8 (TD)',
+     b:`<p>Cột 6 là ES nhỏ nhất của các <b>việc ngay sau</b> (chữ nhỏ ghi việc sau là gì). Cột 7 là EF. Cột 8: <b>TD = cột 6 − cột 7</b>.</p>
+        <div class="calc">B: ES(H) 12 − 5 = 7<br>C: ES(F) 7 − 7 = 0<br>D: ES(G) 10 − 10 = 0<br>F: ES(J) 20 − 9 = 11<br>G: ES(J) 20 − 15 = 5<br>J: T<sub>da</sub> 28 − 28 = 0</div>
+        <div class="key"><b>Vì sao C có TF = 11 mà TD = 0?</b> C và F nằm nối tiếp trên cùng nhánh C → F → J. 11 giờ dư là của cả nhánh và nằm ở cuối, sau F. C chậm 3 giờ thì F bị đẩy lùi 3 giờ (TD = 0), nhưng dự án vẫn xong lúc 28 (TF = 11). D và G cũng giống vậy.</div>`,
+     r:'TD = Min(ES việc ngay sau) − EF · luôn có TD ≤ TF'},
+    {v:'net',o:{vals:3,animate:3,crit:true},rows:['A','E','H','I','J'],legend:L_NET,
+     t:'Đường găng và kiểm tra',
+     b:`<p>Nối các việc có TF = 0: <b>A → E → H → I → J</b>, chỉ có một đường găng.</p>
+        <div class="calc">4 + 8 + 3 + 5 + 8 = 28 ✓</div>
+        <p>So với các nhánh khác, phần dư của mỗi nhánh đúng bằng TF lớn nhất trên nhánh đó:</p>
+        <div class="calc">A→C→F→J = 17 → dư 11<br>A→D→G→J = 23 → dư 5<br>B→H→I→J = 21 → dư 7</div>`,
+     r:'Đường găng là đường dài nhất; độ dài = T_da'},
+    {v:'gantt',mode:'early',rows:ORDER,legend:L_GANTT,
+     t:'Gantt triển khai sớm',
+     b:`<p>Mỗi việc vẽ một dòng, thanh <b>bắt đầu tại ES</b>, dài đúng t giờ. Nét chấm phía sau thanh là <b>TF</b>: việc có thể lùi tới đó (tới LF) mà không trễ dự án.</p>
+        <ul><li><b>Ưu:</b> làm sớm nên còn dự phòng nếu có sự cố.</li>
+        <li><b>Nhược:</b> phải bỏ vốn, huy động nguồn lực sớm.</li></ul>`,
+     r:'Triển khai sớm: bắt đầu tại ES, dự trữ nằm sau thanh'},
+    {v:'gantt',mode:'late',rows:ORDER,legend:L_GANTT,
+     t:'Gantt triển khai muộn',
+     b:`<p>Thanh <b>bắt đầu tại LS</b> và kết thúc đúng LF. Nét chấm phía trước là khoảng việc có thể bắt đầu sớm hơn.</p>
+        <p>So với bản sớm: việc găng A, E, H, I, J đứng yên, chỉ việc có dự trữ dịch sang phải (B dịch 7, C và F dịch 11, D và G dịch 5).</p>
+        <ul><li><b>Ưu:</b> chi tiêu muộn, vốn không bị đọng.</li>
+        <li><b>Nhược:</b> mọi việc thành găng, trễ việc nào là trễ dự án việc đó.</li></ul>`,
+     r:'Triển khai muộn: bắt đầu tại LS, dự trữ nằm trước thanh'},
+    {v:'gantt',mode:'adj',rows:ORDER,legend:L_GANTT+'<span><i></i>nhánh nhập vào</span>',
+     t:'Gantt điều chỉnh (nối PERT với Gantt)',
+     b:`<p>Các việc <b>nối tiếp nhau vẽ chung một dòng</b>, các việc song song vẽ ở dòng khác. 10 dòng gọn lại còn 4:</p>
+        <ul><li>Dòng 1 là đường găng A → E → H → I → J.</li>
+        <li>C → F và D → G tách ra từ giờ thứ 4, sau khi A xong.</li>
+        <li>B chạy song song từ đầu.</li></ul>
+        <p>Nét chấm cuối mỗi nhánh là dự trữ, mũi tên dọc là chỗ nhánh nhập vào việc găng (B nhập vào H, F và G nhập vào J).</p>`,
+     r:'Gantt điều chỉnh thể hiện được quan hệ trước – sau, khắc phục nhược điểm của Gantt thường'},
+    {v:'gantt',mode:'adj',rows:[],legend:L_GANTT,noAnim:true,
+     t:'Nhận xét Gantt (câu lý thuyết hay đi kèm)',
+     b:`<p><b>Ưu điểm</b></p>
+        <ul><li>Dễ xây dựng, dễ đọc, thấy ngay việc gì làm lúc nào</li>
+        <li>Thấy rõ tổng thời gian và tình hình tiến độ</li>
+        <li>Là cơ sở phân bổ nguồn lực hợp lý</li></ul>
+        <p><b>Nhược điểm</b></p>
+        <ul><li>Khó thể hiện quan hệ giữa các công việc, không ghi rõ quy trình công nghệ</li>
+        <li>Chỉ hợp với dự án nhỏ, không phức tạp</li></ul>
+        <p>“Vì sao sau hơn 100 năm vẫn dùng?” Vì ai cũng đọc được, và khi kết hợp với PERT/CPM (Gantt điều chỉnh) thì khắc phục được nhược điểm về quan hệ công việc.</p>`,
+     r:'Ưu nhược điểm theo mục 4.4.2 trong slide'}
+  ];
+
+  /* ================= player ================= */
+  let cur=0,timer=null;
+  const view=$('view');
+  function draw(){
+    const st=STEPS[cur],N=STEPS.length;
+    view.innerHTML='';
+    if(st.v==='net'){
+      const o=Object.assign({},st.o);
+      if(st.focus)o.focus=st.focus;
+      renderNet(view,o);
+    }else if(st.v==='table'){
+      renderTable(view,Object.assign({crit:cur>=5},st.o));
+    }else{
+      renderGantt(view,st.mode);
+      if(st.noAnim)view.querySelectorAll('[class*="anim-"]').forEach(n=>n.style.animation='none');
+    }
+    $('legend').innerHTML=st.legend||'<span><i class="sl" style="border:none;width:0"></i>ô vàng = việc có dự trữ</span>';
+    $('stepNo').textContent='Bước '+cur+' / '+(N-1)+' · '+CH[cur];
+    $('stepTitle').textContent=st.t;
+    $('stepBody').innerHTML=st.b;
+    const rule=$('stepRule');
+    rule.className='rule'+(st.warn?' warn':'');
+    rule.innerHTML='<b>Quy tắc áp dụng</b>'+st.r;
+    document.querySelectorAll('#prob td[data-c]').forEach(td=>td.classList.toggle('hl',st.rows.includes(td.dataset.c)));
+    $('counter').textContent=(cur+1)+'/'+N;
+    $('prev').disabled=cur===0;$('next').disabled=cur===N-1;
+    const dots=$('dots');dots.innerHTML='';
+    const chaps=$('chapters');chaps.innerHTML='';
+    for(let i=0;i<N;i++){
+      const d=document.createElement('button');d.type='button';
+      d.className='dot'+(i===cur?' on':i<cur?' done':'');
+      d.setAttribute('aria-label','Tới bước '+i+': '+CH[i]);
+      d.onclick=()=>{stop();go(i)};dots.appendChild(d);
+      const c=document.createElement('button');c.type='button';
+      c.className='chap'+(i===cur?' on':'');c.textContent=CH[i];
+      c.onclick=()=>{stop();go(i)};chaps.appendChild(c);
+    }
+  }
+  function go(i){cur=Math.max(0,Math.min(STEPS.length-1,i));draw()}
+  function stop(){if(timer){clearInterval(timer);timer=null}$('play').textContent='▶ Tự chạy'}
+  $('prev').onclick=()=>{stop();go(cur-1)};
+  $('next').onclick=()=>{stop();go(cur+1)};
+  $('play').onclick=()=>{
+    if(timer){stop();return}
+    if(cur>=STEPS.length-1)go(0);
+    $('play').textContent='❚❚ Dừng';
+    timer=setInterval(()=>{if(cur>=STEPS.length-1){stop();return}go(cur+1)},6000);
+  };
+  document.addEventListener('keydown',e=>{
+    if(e.key==='ArrowRight'||e.key==='ArrowLeft')e.preventDefault();
+    if(e.key==='ArrowRight'){stop();go(cur+1)}
+    else if(e.key==='ArrowLeft'){stop();go(cur-1)}
+  });
+
+  const root=document.documentElement;
+  try{const t=localStorage.getItem('qlda-theme');if(t)root.setAttribute('data-theme',t)}catch(e){}
+  $('themeBtn').onclick=()=>{
+    const c=root.getAttribute('data-theme')||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');
+    const n=c==='dark'?'light':'dark';root.setAttribute('data-theme',n);
+    try{localStorage.setItem('qlda-theme',n)}catch(e){}
+  };
+
+  draw();
+})();
+</script>

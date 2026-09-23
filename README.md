@@ -25,6 +25,15 @@ Dạy CPM/PERT từ số 0 qua 5 phần:
 ### [`Thu-tu-ve-so-do-mang.html`](Thu-tu-ve-so-do-mang.html)
 Dựng sơ đồ mạng AOA của "Dự án X" theo **8 bước tương tác** (bấm Tiếp/Trước hoặc dùng phím ← →), mỗi bước kèm lý do bám theo quy tắc lập sơ đồ mạng.
 
+### [`Ve-AOA-AON-tung-buoc.html`](Ve-AOA-AON-tung-buoc.html)
+Vẽ sơ đồ AOA (11 bước) và AON (8 bước) cho bài **Workshop "Kỹ năng mềm cho sinh viên"** (slide 34), có hoạt hình từng nét và giải thích quy tắc: bẫy hai việc trùng sự kiện → công việc ảo, đánh số sự kiện, tính E/L/S và ES/EF/LS/LF/TF, hai đường găng A–B–C–F và A–D–F.
+
+### [`Bai-tap-1-TF-TD-Gantt.html`](Bai-tap-1-TF-TD-Gantt.html)
+Giải **Bài tập 1** chương 4 (10 công việc, đơn vị giờ) qua 10 bước: đi xuôi/đi ngược trên sơ đồ AON, bảng 8 cột TF/TD như slide, đường găng A–E–H–I–J (T = 28), biểu đồ Gantt triển khai sớm, muộn, điều chỉnh và nhận xét ưu nhược điểm.
+
+### [`Viec-gia-AOA.html`](Viec-gia-AOA.html)
+3 ví dụ về **việc giả (việc ảo)** trong AOA, mỗi ví dụ đi qua Đề → Vẽ sai → Sửa đúng: hai việc chung gốc và đích, việc trước chồng nhau một phần, và trường hợp cần 2 việc giả. Kèm cách phát hiện khi đọc đề và checklist sau khi vẽ.
+
 Cả hai trang mặc định giao diện tối, có nút ☀️/🌙 ở góc trên bên phải để đổi và ghi nhớ lựa chọn.
 
 ## Nguồn

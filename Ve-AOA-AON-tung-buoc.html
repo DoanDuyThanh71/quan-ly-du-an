@@ -1,0 +1,630 @@
+<title>Vẽ AOA và AON từng bước</title>
+<meta name="description" content="Học vẽ sơ đồ mạng AOA và AON qua bài Workshop Kỹ năng mềm — hoạt hình từng bước, giải thích quy tắc, tính E/L, ES/EF/LS/LF, TF/TD và đường găng.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+  :root{
+    --bg:#f6f7fb; --surface:#ffffff; --surface-2:#eef0fc;
+    --ink:#1c2033; --ink-soft:#585e78; --ink-faint:#8388a3; --border:#e1e3f0;
+    --accent:#4a3fd9; --accent-ink:#ffffff; --accent-soft:#ece9ff;
+    --critical:#c8401f; --critical-soft:#fbeae4;
+    --new:#a86400; --new-ink:#7a4900; --new-soft:#fff3d9;
+    --good:#1f7a4d; --good-soft:#e3f4ea;
+    --shadow:0 1px 2px rgba(28,32,51,.04),0 8px 24px rgba(28,32,51,.06);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      color-scheme:dark;
+      --bg:#13141d; --surface:#1a1c28; --surface-2:#232640;
+      --ink:#eef0fb; --ink-soft:#a7acc7; --ink-faint:#767b98; --border:#2d3050;
+      --accent:#9b93ff; --accent-ink:#14152a; --accent-soft:#252a4d;
+      --critical:#ff8465; --critical-soft:#3a231d;
+      --new:#ffcf66; --new-ink:#ffe1a3; --new-soft:#3a2f12;
+      --good:#6fd6a0; --good-soft:#18302a;
+      --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.35);
+    }
+  }
+  :root[data-theme="dark"]{
+    color-scheme:dark;
+    --bg:#13141d; --surface:#1a1c28; --surface-2:#232640;
+    --ink:#eef0fb; --ink-soft:#a7acc7; --ink-faint:#767b98; --border:#2d3050;
+    --accent:#9b93ff; --accent-ink:#14152a; --accent-soft:#252a4d;
+    --critical:#ff8465; --critical-soft:#3a231d;
+    --new:#ffcf66; --new-ink:#ffe1a3; --new-soft:#3a2f12;
+    --good:#6fd6a0; --good-soft:#18302a;
+    --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.35);
+  }
+
+  *{box-sizing:border-box}
+  body{background:var(--bg);color:var(--ink);font-family:"Be Vietnam Pro",system-ui,sans-serif;line-height:1.55;padding-inline:16px}
+  .wrap{max-width:1080px;margin-inline:auto;padding-block:26px 56px}
+  .mono{font-family:"IBM Plex Mono",ui-monospace,monospace}
+  h1{font-size:clamp(1.4rem,4vw,1.9rem);font-weight:800;letter-spacing:-.01em;margin:6px 0 8px;text-wrap:balance}
+  h2{font-size:1.1rem;font-weight:800;margin:0 0 10px;text-wrap:balance}
+  p{margin:0 0 10px;max-width:64ch}
+  .eyebrow{font-family:"IBM Plex Mono",monospace;font-size:.7rem;letter-spacing:.09em;text-transform:uppercase;color:var(--accent);font-weight:600;margin:0 0 6px}
+  .lede{color:var(--ink-soft);max-width:64ch}
+  .top{display:flex;justify-content:space-between;align-items:flex-start;gap:16px}
+  .theme-btn{flex:none;border:1px solid var(--border);background:var(--surface);color:var(--ink);border-radius:999px;padding:7px 12px;font:inherit;font-size:.85rem;cursor:pointer}
+  button:focus-visible,[role="tab"]:focus-visible,.dot:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+  /* tabs */
+  .tabs{display:flex;gap:6px;margin:22px 0 14px;flex-wrap:wrap}
+  .tab{border:1px solid var(--border);background:var(--surface);color:var(--ink-soft);border-radius:10px;padding:9px 14px;font:inherit;font-weight:700;font-size:.92rem;cursor:pointer;display:flex;flex-direction:column;align-items:flex-start;line-height:1.25}
+  .tab small{font-weight:500;font-size:.75rem;color:var(--ink-faint)}
+  .tab[aria-selected="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+  .tab[aria-selected="true"] small{color:var(--accent-ink);opacity:.8}
+
+  /* stage */
+  .stage{display:grid;grid-template-columns:1.45fr 1fr;gap:18px;align-items:start}
+  @media (max-width:860px){.stage{grid-template-columns:1fr}}
+  .stage>*,.grid2>*{min-width:0}
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:16px;box-shadow:var(--shadow)}
+  .canvas{padding:14px}
+  .svgbox{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .svgbox svg{display:block;width:100%;min-width:600px;height:auto}
+  .legend{display:flex;flex-wrap:wrap;gap:6px 16px;margin:8px 4px 0;font-size:.78rem;color:var(--ink-soft)}
+  .legend span{display:inline-flex;align-items:center;gap:6px}
+  .legend i{display:inline-block;width:22px;height:0;border-top:2px solid var(--ink-soft)}
+  .legend i.d{border-top-style:dashed;border-color:var(--accent)}
+  .legend i.c{border-top-width:3px;border-color:var(--critical)}
+  .legend i.b{border-color:var(--new)}
+
+  .controls{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:12px;padding-top:12px;border-top:1px solid var(--border)}
+  .btn{border:1px solid var(--border);background:var(--surface-2);color:var(--ink);border-radius:10px;padding:8px 14px;font:inherit;font-weight:700;font-size:.88rem;cursor:pointer}
+  .btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+  .btn:disabled{opacity:.4;cursor:default}
+  .counter{font-family:"IBM Plex Mono",monospace;font-size:.82rem;color:var(--ink-soft);margin-inline:4px;font-variant-numeric:tabular-nums}
+  .dots{display:flex;gap:5px;flex-wrap:wrap;margin-left:auto}
+  .dot{width:11px;height:11px;border-radius:50%;border:none;background:var(--border);cursor:pointer;padding:0}
+  .dot.done{background:var(--accent-soft);box-shadow:inset 0 0 0 1.5px var(--accent)}
+  .dot.on{background:var(--accent)}
+  .hint{font-size:.75rem;color:var(--ink-faint);margin-top:8px}
+
+  /* explanation panel */
+  .panel{padding:18px 20px;display:grid;gap:14px}
+  .step-no{font-family:"IBM Plex Mono",monospace;font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);font-weight:600}
+  .panel h3{margin:2px 0 0;font-size:1.08rem;font-weight:800;text-wrap:balance}
+  .body{font-size:.93rem;color:var(--ink-soft)}
+  .body p{margin:0 0 8px}
+  .body b{color:var(--ink)}
+  .body .calc{font-family:"IBM Plex Mono",monospace;font-size:.84rem;background:var(--surface-2);border-radius:8px;padding:8px 10px;margin:6px 0 8px;color:var(--ink);line-height:1.7;font-variant-numeric:tabular-nums}
+  .body ul{margin:4px 0 8px;padding-left:18px;display:grid;gap:3px}
+  .rule{font-size:.84rem;border-radius:10px;padding:9px 12px;background:var(--accent-soft);color:var(--ink)}
+  .rule b{display:block;font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;font-family:"IBM Plex Mono",monospace;color:var(--accent);margin-bottom:2px}
+  .rule.warn{background:var(--new-soft)}
+  .rule.warn b{color:var(--new-ink)}
+  .rule.ok{background:var(--good-soft)}
+  .rule.ok b{color:var(--good)}
+
+  /* problem table */
+  .tblwrap{overflow-x:auto}
+  table{border-collapse:collapse;width:100%;font-size:.84rem;font-variant-numeric:tabular-nums}
+  th,td{padding:6px 8px;text-align:left;border-bottom:1px solid var(--border);white-space:nowrap}
+  th{font-size:.7rem;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-faint);font-weight:600}
+  td.code{font-weight:800;font-family:"IBM Plex Mono",monospace}
+  tr.hl td{background:var(--accent-soft)}
+  tr.hl td.code{color:var(--accent)}
+  .succ{color:var(--new-ink)}
+  table.col-hl .succ{background:var(--new-soft);font-weight:700}
+  .tbl-cap{font-size:.72rem;color:var(--ink-faint);margin-top:6px}
+
+  /* lower sections */
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:26px}
+  @media (max-width:860px){.grid2{grid-template-columns:1fr}}
+  .sec{padding:18px 20px}
+  .cmp td,.cmp th{white-space:normal;vertical-align:top}
+  .cmp td:first-child{color:var(--ink-faint);font-size:.78rem;width:28%}
+  .ans td.crit{color:var(--critical);font-weight:800}
+  .ans tr.critrow td.code{color:var(--critical)}
+  .note{font-size:.84rem;color:var(--ink-soft);margin-top:10px}
+  .note b{color:var(--ink)}
+
+  /* ---------- SVG ---------- */
+  svg text{font-family:"Be Vietnam Pro",system-ui,sans-serif}
+  .arr .line{fill:none;stroke:var(--ink-soft);stroke-width:2}
+  .arr .head{fill:var(--ink-soft)}
+  .arr .lbl{font-size:14px;font-weight:700;fill:var(--ink)}
+  .arr .lbl tspan.d{font-family:"IBM Plex Mono",monospace;font-weight:500;fill:var(--ink-soft)}
+  .arr.dummy .line{stroke:var(--accent);stroke-dasharray:7 6}
+  .arr.dummy .head{fill:var(--accent)}
+  .arr.dummy .lbl{fill:var(--accent)}
+  .arr.bad .line{stroke:var(--new);stroke-width:2.6;stroke-dasharray:8 5}
+  .arr.bad .head{fill:var(--new)}
+  .arr.bad .lbl{fill:var(--new)}
+  .arr.crit .line{stroke:var(--critical);stroke-width:3.2}
+  .arr.crit .head{fill:var(--critical)}
+  .arr.crit .lbl{fill:var(--critical)}
+  .ev circle{fill:var(--surface);stroke:var(--ink-soft);stroke-width:2}
+  .ev.crit circle{stroke:var(--critical);stroke-width:3}
+  .ev .q{stroke:var(--border);stroke-width:1.2}
+  .ev .num{font-size:17px;font-weight:800;fill:var(--ink);text-anchor:middle}
+  .ev .num.small{font-size:12px}
+  .ev .val{font-family:"IBM Plex Mono",monospace;font-size:12px;font-weight:600;text-anchor:middle;fill:var(--ink)}
+  .ev .val.e{fill:var(--accent)}
+  .ev .val.l{fill:var(--new)}
+  .ev .val.s{fill:var(--ink-soft)}
+  .ev.crit .val.s{fill:var(--critical)}
+  .ev .blank{fill:var(--ink-faint);font-size:13px;text-anchor:middle}
+  .warnmark{font-size:13px;font-weight:800;fill:var(--new)}
+  .tag{font-family:"IBM Plex Mono",monospace;font-size:11px;fill:var(--ink-faint)}
+
+  .node rect.box{fill:var(--surface);stroke:var(--ink-soft);stroke-width:2}
+  .node.crit rect.box{stroke:var(--critical);stroke-width:3}
+  .node .sep{stroke:var(--border);stroke-width:1.2}
+  .node .name{font-size:17px;font-weight:800;text-anchor:middle;fill:var(--ink)}
+  .node.crit .name{fill:var(--critical)}
+  .node .cell{font-family:"IBM Plex Mono",monospace;font-size:13px;font-weight:600;text-anchor:middle;fill:var(--ink)}
+  .node .cell.ph{font-size:10px;font-weight:500;fill:var(--ink-faint)}
+  .node .cell.es{fill:var(--accent)}
+  .node .cell.lf{fill:var(--new)}
+  .node .cell.tf{fill:var(--ink-soft)}
+  .node.crit .cell.tf{fill:var(--critical)}
+
+  @keyframes draw{from{stroke-dashoffset:1}to{stroke-dashoffset:0}}
+  @keyframes fade{from{opacity:0}to{opacity:1}}
+  @keyframes pop{0%{opacity:0;transform:scale(.4)}100%{opacity:1;transform:scale(1)}}
+  @keyframes valpop{0%{opacity:0;transform:translateY(-6px) scale(1.6)}100%{opacity:1;transform:none}}
+  .anim-draw{stroke-dasharray:1;animation:draw .75s ease-out both;animation-delay:var(--d,0s)}
+  .anim-fade{animation:fade .45s ease-out both;animation-delay:var(--d,0s)}
+  .anim-pop{transform-box:fill-box;transform-origin:center;animation:pop .5s cubic-bezier(.2,.9,.3,1.25) both;animation-delay:var(--d,0s)}
+  .anim-val{transform-box:fill-box;transform-origin:center;animation:valpop .55s ease-out both;animation-delay:var(--d,0s)}
+  @media (prefers-reduced-motion: reduce){
+    .anim-draw,.anim-fade,.anim-pop,.anim-val{animation:none}
+  }
+</style>
+
+<div class="wrap">
+  <div class="top">
+    <div>
+      <p class="eyebrow">Chương 4 · Sơ đồ mạng</p>
+      <h1>Vẽ AOA và AON từng bước</h1>
+      <p class="lede">Đề: <b>Tổ chức workshop “Kỹ năng mềm cho sinh viên”</b> (slide 34). Bấm <b>Tiếp</b> hoặc phím → để xem từng nét được vẽ, kèm lý do theo đúng quy tắc trong bài giảng.</p>
+    </div>
+    <button class="theme-btn" id="themeBtn" type="button" aria-label="Đổi giao diện sáng/tối">◐ Giao diện</button>
+  </div>
+
+  <div class="tabs" role="tablist">
+    <button class="tab" role="tab" id="tab-aoa" aria-selected="true" aria-controls="stage" type="button">AOA<small>việc trên mũi tên · 11 bước</small></button>
+    <button class="tab" role="tab" id="tab-aon" aria-selected="false" aria-controls="stage" type="button">AON<small>việc trong nút · 8 bước</small></button>
+  </div>
+
+  <div class="stage" id="stage">
+    <div class="card canvas">
+      <div class="svgbox"><svg id="svg" viewBox="0 0 780 320" role="img" aria-label="Sơ đồ mạng đang vẽ"></svg></div>
+      <div class="legend" id="legend"></div>
+      <div class="controls">
+        <button class="btn" id="prev" type="button">← Trước</button>
+        <button class="btn primary" id="next" type="button">Tiếp →</button>
+        <button class="btn" id="play" type="button">▶ Tự chạy</button>
+        <span class="counter" id="counter"></span>
+        <div class="dots" id="dots"></div>
+      </div>
+      <p class="hint">Phím ← → để chuyển bước · bấm chấm tròn để nhảy tới bước bất kỳ</p>
+    </div>
+
+    <div class="card panel">
+      <div>
+        <div class="step-no" id="stepNo"></div>
+        <h3 id="stepTitle"></h3>
+      </div>
+      <div class="body" id="stepBody"></div>
+      <div class="rule" id="stepRule"></div>
+      <div>
+        <div class="tblwrap">
+          <table id="prob">
+            <thead><tr><th>Mã</th><th>Công việc</th><th>t</th><th>Việc trước</th><th>Việc sau*</th></tr></thead>
+            <tbody>
+              <tr data-c="A"><td class="code">A</td><td>Lên ý tưởng</td><td>2</td><td>–</td><td class="succ">B, D</td></tr>
+              <tr data-c="B"><td class="code">B</td><td>Xin phê duyệt từ khoa</td><td>1</td><td>A</td><td class="succ">C, E</td></tr>
+              <tr data-c="C"><td class="code">C</td><td>Đặt phòng</td><td>2</td><td>B</td><td class="succ">F</td></tr>
+              <tr data-c="D"><td class="code">D</td><td>Thiết kế slide, tài liệu</td><td>3</td><td>A</td><td class="succ">F</td></tr>
+              <tr data-c="E"><td class="code">E</td><td>Chuẩn bị quà tặng</td><td>1</td><td>B</td><td class="succ">F</td></tr>
+              <tr data-c="F"><td class="code">F</td><td>Tập dượt</td><td>1</td><td>C, D, E</td><td class="succ">–</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="tbl-cap">t tính bằng ngày · *cột “Việc sau” tự suy ra từ cột “Việc trước”, đề không cho sẵn</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid2">
+    <section class="card sec">
+      <h2>Đáp án tổng hợp</h2>
+      <div class="tblwrap">
+        <table class="ans">
+          <thead><tr><th>CV</th><th>t</th><th>ES</th><th>EF</th><th>LS</th><th>LF</th><th>TF</th><th>TD</th></tr></thead>
+          <tbody>
+            <tr class="critrow"><td class="code">A</td><td>2</td><td>0</td><td>2</td><td>0</td><td>2</td><td class="crit">0</td><td>0</td></tr>
+            <tr class="critrow"><td class="code">B</td><td>1</td><td>2</td><td>3</td><td>2</td><td>3</td><td class="crit">0</td><td>0</td></tr>
+            <tr class="critrow"><td class="code">C</td><td>2</td><td>3</td><td>5</td><td>3</td><td>5</td><td class="crit">0</td><td>0</td></tr>
+            <tr class="critrow"><td class="code">D</td><td>3</td><td>2</td><td>5</td><td>2</td><td>5</td><td class="crit">0</td><td>0</td></tr>
+            <tr><td class="code">E</td><td>1</td><td>3</td><td>4</td><td>4</td><td>5</td><td>1</td><td>1</td></tr>
+            <tr class="critrow"><td class="code">F</td><td>1</td><td>5</td><td>6</td><td>5</td><td>6</td><td class="crit">0</td><td>0</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="note"><b>T<sub>da</sub> = 6 ngày.</b> Có hai đường găng cùng dài 6: <b>A → B → C → F</b> và <b>A → D → F</b>. Chỉ E có dự trữ: TF = LS − ES = 4 − 3 = 1; TD = ES(F) − EF(E) = 5 − 4 = 1.</p>
+      <p class="note">Dự trữ sự kiện (AOA): S<sub>1</sub>…S<sub>6</sub> = 0, 0, 0, <b>1</b>, 0, 0 — chỉ sự kiện 4 (“E xong”) được trễ.</p>
+    </section>
+
+    <section class="card sec">
+      <h2>AOA hay AON — khác nhau ở đâu</h2>
+      <div class="tblwrap">
+        <table class="cmp">
+          <tbody>
+            <tr><td>Công việc nằm ở</td><td><b>AOA:</b> mũi tên (ghi tên · t)</td><td><b>AON:</b> ô/nút</td></tr>
+            <tr><td>Vòng tròn / nút là</td><td>Sự kiện (mốc thời gian), đánh số 1…n</td><td>Chính công việc</td></tr>
+            <tr><td>Mũi tên là</td><td>Công việc, có thời gian</td><td>Chỉ quan hệ trước–sau</td></tr>
+            <tr><td>Việc ảo</td><td>Có thể cần (bài này cần 1)</td><td>Không bao giờ cần</td></tr>
+            <tr><td>Tính thời gian</td><td>E<sub>j</sub>, L<sub>j</sub>, S<sub>j</sub> cho sự kiện</td><td>ES, EF, LS, LF, TF ghi ngay trong ô</td></tr>
+            <tr><td>Chỗ hay sai</td><td>Hai việc trùng cặp sự kiện; đánh số sai</td><td>Quên việc có nhiều việc trước</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+</div>
+
+<script>
+(function(){
+  const NS='http://www.w3.org/2000/svg';
+  const $=id=>document.getElementById(id);
+  function el(tag,attrs,parent){const e=document.createElementNS(NS,tag);if(attrs)for(const k in attrs)e.setAttribute(k,attrs[k]);if(parent)parent.appendChild(e);return e}
+  function txt(parent,x,y,s,cls,extra){const t=el('text',Object.assign({x,y,class:cls||''},extra||{}),parent);t.textContent=s;return t}
+  function anim(node,cls,delay){node.classList.add(cls);node.style.setProperty('--d',(delay||0)+'s')}
+  const shown=(o,s)=>s>=o.step&&(o.until==null||s<o.until);
+
+  /* ---------- generic arrow ---------- */
+  // a,b: {x,y}; ra/rb: trim radius at each end; opts: curve, side, dummy
+  function arrow(g,a,b,ra,rb,o,isNew,delay){
+    let dx=b.x-a.x,dy=b.y-a.y,L=Math.hypot(dx,dy),ux=dx/L,uy=dy/L;
+    const nx=uy,ny=-ux; // normal pointing "up"
+    let d,sx,sy,ex,ey,mx,my,tx,ty,lx,ly,side=o.side||1;
+    if(o.curve){
+      const cx=(a.x+b.x)/2+nx*o.curve,cy=(a.y+b.y)/2+ny*o.curve;
+      let v1x=cx-a.x,v1y=cy-a.y,l1=Math.hypot(v1x,v1y);sx=a.x+v1x/l1*ra;sy=a.y+v1y/l1*ra;
+      let v2x=cx-b.x,v2y=cy-b.y,l2=Math.hypot(v2x,v2y);ex=b.x+v2x/l2*rb;ey=b.y+v2y/l2*rb;
+      tx=-v2x/l2;ty=-v2y/l2;
+      d=`M${sx} ${sy} Q${cx} ${cy} ${ex} ${ey}`;
+      mx=.25*sx+.5*cx+.25*ex;my=.25*sy+.5*cy+.25*ey;
+      const s=Math.sign(o.curve);lx=mx+nx*16*s;ly=my+ny*16*s;
+    }else{
+      sx=a.x+ux*ra;sy=a.y+uy*ra;ex=b.x-ux*rb;ey=b.y-uy*rb;tx=ux;ty=uy;
+      d=`M${sx} ${sy} L${ex} ${ey}`;
+      mx=(sx+ex)/2;my=(sy+ey)/2;
+      const off=o.off||15;lx=mx+nx*off*side;ly=my+ny*off*side;
+    }
+    const cls='arr'+(o.dummy?' dummy':'')+(o.bad?' bad':'')+(o.crit?' crit':'');
+    const grp=el('g',{class:cls},g);
+    const attrs={d,class:'line'};
+    if(!o.dummy&&!o.bad)attrs.pathLength='1';
+    const p=el('path',attrs,grp);
+    // arrow head, drawn manually so it can appear after the line
+    const hl=11,hw=5.5,bx=ex-tx*hl,by=ey-ty*hl;
+    const h=el('path',{class:'head',d:`M${ex} ${ey} L${bx+ty*hw} ${by-tx*hw} L${bx-ty*hw} ${by+tx*hw} Z`},grp);
+    let lab=null;
+    if(o.name){
+      lab=el('text',{x:lx,y:ly+5,class:'lbl','text-anchor':'middle'},grp);
+      lab.textContent=o.name+' ';
+      const ts=el('tspan',{class:'d'},lab);ts.textContent='· '+o.d;
+    }
+    if(isNew){
+      if(attrs.pathLength)anim(p,'anim-draw',delay);else anim(p,'anim-fade',delay);
+      anim(h,'anim-fade',delay+.6);
+      if(lab)anim(lab,'anim-fade',delay+.35);
+    }
+    return {grp,lx,ly,mx,my};
+  }
+
+  /* ================= AOA ================= */
+  const R=28;
+  const AOA_EV={
+    e1:{x:70, y:235,n:1,E:0,L:0,step:0},
+    e2:{x:220,y:235,n:2,E:2,L:2,step:1},
+    e3:{x:375,y:128,n:3,E:3,L:3,step:2},
+    e4:{x:525,y:62, n:4,E:4,L:5,step:4},
+    e5:{x:600,y:235,n:5,E:5,L:5,step:2},
+    e6:{x:725,y:235,n:6,E:6,L:6,step:5}
+  };
+  const AOA_AR=[
+    {f:'e1',t:'e2',name:'A',d:2,step:1,crit:1},
+    {f:'e2',t:'e3',name:'B',d:1,step:2,crit:1},
+    {f:'e2',t:'e5',name:'D',d:3,step:2,crit:1,delay:.55},
+    {f:'e3',t:'e5',name:'C',d:2,step:3,crit:1},
+    {f:'e3',t:'e5',name:'E',d:1,step:3,until:4,bad:1,curve:62,delay:.9},
+    {f:'e3',t:'e4',name:'E',d:1,step:4},
+    {f:'e4',t:'e5',name:'ảo',d:0,step:4,dummy:1,delay:.6,side:-1},
+    {f:'e5',t:'e6',name:'F',d:1,step:5,crit:1}
+  ];
+  const CRIT_STEP_AOA=10;
+
+  function renderAOA(svg,s){
+    svg.setAttribute('viewBox','0 0 780 300');
+    const ga=el('g',{},svg),ge=el('g',{},svg);
+    AOA_AR.forEach(o=>{
+      if(!shown(o,s))return;
+      const a=AOA_EV[o.f],b=AOA_EV[o.t];
+      const r=arrow(ga,a,b,R,R+2,Object.assign({},o,{crit:o.crit&&s>=CRIT_STEP_AOA}),o.step===s,o.delay||0);
+      if(o.bad){
+        const w=txt(ga,r.lx+26,r.ly+6,'✗ trùng (3,5) với C','warnmark');
+        if(o.step===s)anim(w,'anim-fade',(o.delay||0)+.9);
+      }
+    });
+    Object.values(AOA_EV).forEach(e=>{
+      if(!shown(e,s))return;
+      const isNew=e.step===s;
+      const crit=s>=CRIT_STEP_AOA&&e.E===e.L;
+      const g=el('g',{class:'ev'+(crit?' crit':'')},ge);
+      el('circle',{cx:e.x,cy:e.y,r:R},g);
+      if(isNew)anim(g,'anim-pop',e.n===5&&s===2?.5:e.n===4?.15:0);
+      if(s<6){txt(g,e.x,e.y+5,'?','blank');return}
+      if(s<8){
+        const t=txt(g,e.x,e.y+6,e.n,'num');
+        if(s===6)anim(t,'anim-val',.25*e.n);
+        return;
+      }
+      // four-quadrant event: top number, left E, right L, bottom S
+      const k=R*.7071;
+      const q1=el('line',{x1:e.x-k,y1:e.y-k,x2:e.x+k,y2:e.y+k,class:'q'},g);
+      const q2=el('line',{x1:e.x+k,y1:e.y-k,x2:e.x-k,y2:e.y+k,class:'q'},g);
+      if(s===8){anim(q1,'anim-fade',0);anim(q2,'anim-fade',0)}
+      txt(g,e.x,e.y-11,e.n,'num small');
+      const ev=txt(g,e.x-15,e.y+5,e.E,'val e');
+      if(s===8)anim(ev,'anim-val',.2+.3*e.n);
+      if(s>=9){const lv=txt(g,e.x+15,e.y+5,e.L,'val l');if(s===9)anim(lv,'anim-val',.2+.3*(7-e.n))}
+      if(s>=10){const sv=txt(g,e.x,e.y+21,e.L-e.E,'val s');if(s===10)anim(sv,'anim-val',.2+.15*e.n)}
+    });
+    if(s>=8){
+      // quadrant key
+      const kx=60,ky=62,g=el('g',{class:'ev'},ge);
+      el('circle',{cx:kx,cy:ky,r:R},g);
+      const k=R*.7071;
+      el('line',{x1:kx-k,y1:ky-k,x2:kx+k,y2:ky+k,class:'q'},g);
+      el('line',{x1:kx+k,y1:ky-k,x2:kx-k,y2:ky+k,class:'q'},g);
+      txt(g,kx,ky-11,'j','num small');
+      txt(g,kx-15,ky+5,'E','val e');txt(g,kx+15,ky+5,'L','val l');txt(g,kx,ky+21,'S','val s');
+      txt(ge,kx+38,ky-4,'cách ghi','tag');txt(ge,kx+38,ky+11,'sự kiện','tag');
+    }
+  }
+
+  const AOA_STEPS=[
+    {t:'Đọc đề, lập thêm cột “Việc sau”',rows:['A'],col:true,
+     b:`<p>Đề chỉ cho <b>việc trước</b>. Lật ngược lại để biết mỗi việc dẫn tới đâu (cột vàng bên dưới):</p>
+        <div class="calc">A → B, D<br>B → C, E<br>C, D, E → F<br>F → (kết thúc)</div>
+        <p>Nhìn bảng là thấy ngay hình dạng sơ đồ: <b>A</b> là việc duy nhất không có việc trước, nên nó xuất phát từ sự kiện đầu. <b>C, D, E</b> có chung việc sau là F, nên cả ba phải hội tụ tại một sự kiện.</p>`,
+     r:'Việc không có việc đứng trước xuất phát từ sự kiện 1'},
+    {t:'Vẽ A từ sự kiện xuất phát',rows:['A'],
+     b:`<p>Vẽ một mũi tên thẳng cho A, ghi <b>A · 2</b> (tên · thời gian). Chiều dài mũi tên <b>không</b> tỉ lệ với thời gian.</p>
+        <p>Đầu mũi tên là một sự kiện mới, nghĩa là “A xong”. Tạm để dấu <b>?</b>, chưa đánh số vội. Đánh số sau cùng thì không phải sửa lại.</p>`,
+     r:'Mỗi công việc là một mũi tên thẳng, có sự kiện đầu và sự kiện cuối'},
+    {t:'B và D cùng bắt đầu sau A',rows:['B','D'],
+     b:`<p>B và D có chung việc trước là A, nên cả hai xuất phát từ <b>cùng một sự kiện</b>: sự kiện cuối của A.</p>
+        <p>B đi lên vì sau B còn C, E. D chỉ có một việc sau là F, mà C, E cũng dẫn tới F, nên kéo D thẳng tới <b>điểm hội tụ trước F</b>, đặt sẵn ở bên phải.</p>`,
+     r:'Những việc có chung việc đứng trước cùng xuất phát từ một sự kiện'},
+    {t:'C và E sau B — và cái bẫy',rows:['C','E'],warn:true,
+     b:`<p>C, E có chung việc trước là B, nên xuất phát từ sự kiện cuối của B. C dẫn tới F nên nối vào điểm hội tụ.</p>
+        <p>E cũng dẫn tới F. Nếu nối thẳng E vào điểm hội tụ (nét vàng) thì C và E có <b>chung sự kiện đầu và chung sự kiện cuối</b>. Khi đó ký hiệu (3, 5) không biết là C hay E. Vẽ vậy là <b>sai</b>.</p>`,
+     r:'Hai công việc không được trùng cả sự kiện đầu lẫn sự kiện cuối'},
+    {t:'Sửa bằng công việc ảo',rows:['E'],
+     b:`<p>Cho E kết thúc ở một <b>sự kiện riêng</b>, rồi nối sự kiện đó tới điểm hội tụ bằng <b>mũi tên nét đứt, tức công việc ảo</b>.</p>
+        <p>Việc ảo có t = 0 và không tốn nguồn lực. Nó chỉ nói một điều: “F phải chờ cả E”. Giờ C và E có sự kiện cuối khác nhau, còn quan hệ E → F vẫn giữ nguyên.</p>`,
+     r:'Công việc ảo: t = 0, vẽ nét đứt, chỉ thể hiện quan hệ trước – sau'},
+    {t:'F đi tới sự kiện hoàn thành',rows:['F'],
+     b:`<p>F chỉ bắt đầu khi C, D và E (qua việc ảo) đều xong, đúng tại điểm hội tụ.</p>
+        <p>F không có việc sau nên kết thúc tại <b>sự kiện hoàn thành</b>. Sơ đồ có đúng một sự kiện xuất phát và một sự kiện hoàn thành.</p>`,
+     r:'Việc không có việc đứng sau hội tụ tại sự kiện hoàn thành'},
+    {t:'Đánh số sự kiện',rows:[],
+     b:`<p>Đánh số từ trái sang phải, từ nhỏ đến lớn, không trùng. Số ở <b>đầu mũi tên luôn lớn hơn số ở đuôi</b>.</p>
+        <p>Điểm hội tụ có 3 mũi tên đi vào (C, D, ảo). Chỉ được đánh số nó khi mọi sự kiện ở đuôi các mũi tên đó đã có số, tức sau 2, 3 và 4. Vì vậy “E xong” là <b>4</b>, điểm hội tụ là <b>5</b>, hoàn thành là <b>6</b>.</p>
+        <div class="calc">A(1,2) B(2,3) C(3,5) D(2,5)<br>E(3,4) ảo(4,5) F(5,6)</div>`,
+     r:'Sự kiện ở đầu mũi tên mang số lớn hơn sự kiện ở đuôi'},
+    {t:'Soát lại trước khi nộp',rows:[],ok:true,
+     b:`<ul>
+          <li>Vẽ từ trái sang phải</li>
+          <li>7 mũi tên = 6 việc thật + 1 việc ảo</li>
+          <li>Không có mũi tên cắt nhau</li>
+          <li>Không có đường cụt: mọi việc trừ F đều có việc tiếp</li>
+          <li>Chỉ 1 sự kiện đầu (1) và 1 sự kiện cuối (6)</li>
+          <li>Không có hai việc trùng cặp (i, j)</li>
+        </ul>`,
+     r:'Sơ đồ đạt đủ quy tắc lập sơ đồ mạng'},
+    {t:'Đi xuôi: tính Eⱼ (lấy MAX)',rows:['A','B','C','D','E','F'],
+     b:`<p>Mỗi vòng tròn chia 4 ô: <b>trên</b> là số sự kiện, <b>trái</b> là E<sub>j</sub>, <b>phải</b> là L<sub>j</sub>, <b>dưới</b> là S<sub>j</sub>. Lấy E<sub>1</sub> = 0, rồi xét mọi mũi tên đi vào j:</p>
+        <div class="calc">E2 = 0+2 = 2<br>E3 = 2+1 = 3<br>E4 = 3+1 = 4<br>E5 = max(3+2, 2+3, 4+0) = 5<br>E6 = 5+1 = 6 → T<sub>da</sub> = 6</div>`,
+     r:'Eⱼ = Max(Eᵢ + tᵢⱼ), E₁ = 0'},
+    {t:'Đi ngược: tính Lⱼ (lấy MIN)',rows:['A','B','C','D','E','F'],
+     b:`<p>Bắt đầu từ sự kiện cuối với L<sub>6</sub> = T<sub>da</sub> = 6, rồi xét mọi mũi tên đi ra khỏi j:</p>
+        <div class="calc">L5 = 6−1 = 5<br>L4 = 5−0 = 5<br>L3 = min(5−2, 5−1) = 3<br>L2 = min(3−1, 5−3) = 2<br>L1 = 2−2 = 0</div>`,
+     r:'Lⱼ = Min(Lₖ − tⱼₖ), Lₙ = T_da'},
+    {t:'Dự trữ sự kiện và đường găng',rows:['A','B','C','D','F'],
+     b:`<p>S<sub>j</sub> = L<sub>j</sub> − E<sub>j</sub>. Chỉ <b>sự kiện 4</b> có S = 1, nghĩa là “E xong” được trễ 1 ngày. Các sự kiện còn lại có S = 0.</p>
+        <p>Đường găng dài đúng T<sub>da</sub> = 6 và có <b>hai đường</b>:</p>
+        <div class="calc">1→2→3→5→6 : A–B–C–F<br>1→2→5→6 : A–D–F</div>
+        <p>Đừng chỉ ghi một đường. Cần giám sát chặt A, B, C, D, F.</p>`,
+     r:'Sⱼ = Lⱼ − Eⱼ; đường găng là đường dài nhất = T_da'}
+  ];
+
+  /* ================= AON ================= */
+  const W=116,H=84;
+  const AON_N={
+    A:{x:90, y:190,t:2,ES:0,EF:2,LS:0,LF:2,step:0,crit:1,ord:0},
+    B:{x:270,y:110,t:1,ES:2,EF:3,LS:2,LF:3,step:1,crit:1,ord:1},
+    D:{x:270,y:282,t:3,ES:2,EF:5,LS:2,LF:5,step:1,crit:1,ord:2},
+    C:{x:455,y:55, t:2,ES:3,EF:5,LS:3,LF:5,step:2,crit:1,ord:3},
+    E:{x:455,y:190,t:1,ES:3,EF:4,LS:4,LF:5,step:2,crit:0,ord:4},
+    F:{x:650,y:190,t:1,ES:5,EF:6,LS:5,LF:6,step:3,crit:1,ord:5}
+  };
+  const AON_AR=[
+    {f:'A',t:'B',step:1,crit:1},{f:'A',t:'D',step:1,crit:1,delay:.2},
+    {f:'B',t:'C',step:2,crit:1},{f:'B',t:'E',step:2,delay:.2},
+    {f:'C',t:'F',step:3,crit:1,oy:-22,delay:.3},{f:'E',t:'F',step:3,delay:.5},{f:'D',t:'F',step:3,crit:1,oy:22,delay:.7}
+  ];
+  const CRIT_STEP_AON=7;
+
+  function renderAON(svg,s){
+    svg.setAttribute('viewBox','0 0 760 340');
+    const ga=el('g',{},svg),gn=el('g',{},svg);
+    AON_AR.forEach(o=>{
+      if(!shown(o,s))return;
+      const a=AON_N[o.f],b=AON_N[o.t];
+      arrow(ga,{x:a.x+W/2,y:a.y},{x:b.x-W/2,y:b.y+(o.oy||0)},0,1,{crit:o.crit&&s>=CRIT_STEP_AON},o.step===s,o.delay||0);
+    });
+    Object.entries(AON_N).forEach(([name,n])=>{
+      if(!shown(n,s))return;
+      const crit=s>=CRIT_STEP_AON&&n.crit;
+      const g=el('g',{class:'node'+(crit?' crit':'')},gn);
+      const x0=n.x-W/2,y0=n.y-H/2,cw=W/3;
+      el('rect',{x:x0,y:y0,width:W,height:H,rx:8,class:'box'},g);
+      el('line',{x1:x0,y1:n.y-14,x2:x0+W,y2:n.y-14,class:'sep'},g);
+      el('line',{x1:x0,y1:n.y+14,x2:x0+W,y2:n.y+14,class:'sep'},g);
+      [1,2].forEach(i=>{
+        el('line',{x1:x0+cw*i,y1:y0,x2:x0+cw*i,y2:n.y-14,class:'sep'},g);
+        el('line',{x1:x0+cw*i,y1:n.y+14,x2:x0+cw*i,y2:y0+H,class:'sep'},g);
+      });
+      txt(g,n.x,n.y+6,name,'name');
+      const cx=[x0+cw/2,n.x,x0+cw*2.5],ty=n.y-23,by=n.y+33;
+      txt(g,cx[1],ty,n.t,'cell');
+      const put=(x,y,val,ph,cls,from,delay)=>{
+        if(s>=from){const t=txt(g,x,y,val,'cell '+cls);if(s===from)anim(t,'anim-val',delay)}
+        else txt(g,x,y-1,ph,'cell ph');
+      };
+      const fw=.25+.35*n.ord, bw=.25+.35*(5-n.ord);
+      put(cx[0],ty,n.ES,'ES','es',5,fw);
+      put(cx[2],ty,n.EF,'EF','es',5,fw+.15);
+      put(cx[2],by,n.LF,'LF','lf',6,bw);
+      put(cx[0],by,n.LS,'LS','lf',6,bw+.15);
+      put(cx[1],by,n.LS-n.ES,'TF','tf',7,.2+.15*n.ord);
+      if(n.step===s)anim(g,'anim-pop',n.ord===2||n.ord===4?.2:0);
+    });
+    if(s===0){
+      txt(gn,40,300,'Cách ghi một ô:  ES | t | EF  ·  tên việc  ·  LS | TF | LF','tag');
+    }
+  }
+
+  const AON_STEPS=[
+    {t:'AON: công việc nằm trong nút',rows:['A'],
+     b:`<p>Mỗi công việc là <b>một ô chữ nhật</b>. Mũi tên chỉ nói “xong việc này mới tới việc kia”, <b>không</b> mang thời gian.</p>
+        <p>Ô chia 3 hàng: trên là <b>ES | t | EF</b>, giữa là tên việc, dưới là <b>LS | TF | LF</b>. Lúc đầu chỉ điền t, các ô khác để trống.</p>
+        <p>Đề này chỉ A không có việc trước và chỉ F không có việc sau, nên <b>không cần</b> thêm nút “Khởi sự” hay “Kết thúc”. A chính là điểm đầu.</p>`,
+     r:'Trong mạng chỉ có một điểm đầu tiên và một điểm cuối cùng'},
+    {t:'Nối A → B và A → D',rows:['B','D'],
+     b:`<p>B và D đều có việc trước là A, nên có hai mũi tên đi ra từ A.</p>
+        <p>Đặt B, D <b>cùng một cột</b>, tức cùng “tầng” sau A. Xếp theo tầng thì mũi tên luôn đi từ trái sang phải và không cắt nhau.</p>`,
+     r:'Mũi tên chỉ xác định thứ tự trước sau, không xác định độ dài'},
+    {t:'Nối B → C và B → E',rows:['C','E'],
+     b:`<p>C và E đều có việc trước là B. Đặt C, E ở tầng thứ ba.</p>
+        <p>D chưa có việc sau vì việc sau của nó là F, sẽ vẽ ở bước tiếp theo.</p>`,
+     r:'Mỗi quan hệ “X trước Y” là đúng một mũi tên X → Y'},
+    {t:'C, D, E cùng dẫn vào F',rows:['C','D','E','F'],
+     b:`<p>Vẽ F và ba mũi tên C → F, D → F, E → F. Đây là chỗ AON dễ hơn AOA: <b>không bao giờ cần việc ảo</b>.</p>
+        <p>Mỗi quan hệ đã là một mũi tên riêng, nên không thể có hai việc trùng sự kiện như ở AOA.</p>`,
+     r:'Việc có nhiều việc trước sẽ nhận nhiều mũi tên đi vào'},
+    {t:'Soát lại sơ đồ',rows:[],ok:true,
+     b:`<ul>
+          <li>6 nút = 6 công việc</li>
+          <li>7 mũi tên = 7 quan hệ trong cột “Việc trước”: B:A, C:B, D:A, E:B, F:C, F:D, F:E</li>
+          <li>Mọi nút trừ F có ít nhất một nút đứng sau</li>
+          <li>Mọi nút trừ A có ít nhất một nút đứng trước</li>
+          <li>Không có mũi tên cắt nhau</li>
+        </ul>`,
+     r:'Sơ đồ AON đạt đủ quy tắc'},
+    {t:'Đi xuôi: ES, EF (lấy MAX)',rows:['A','B','C','D','E','F'],
+     b:`<p>ES của việc đầu = 0 và EF = ES + t. ES của một việc là <b>max EF của các việc trước nó</b>:</p>
+        <div class="calc">A: 0 → 2<br>B: 2 → 3   D: 2 → 5<br>C: 3 → 5   E: 3 → 4<br>F: ES = max(5, 5, 4) = 5 → EF = 6</div>
+        <p>T<sub>da</sub> = EF của F = <b>6 ngày</b>.</p>`,
+     r:'ES = Max(EF các việc trước); EF = ES + t'},
+    {t:'Đi ngược: LF, LS (lấy MIN)',rows:['A','B','C','D','E','F'],
+     b:`<p>LF của việc cuối = T<sub>da</sub> = 6 và LS = LF − t. LF của một việc là <b>min LS của các việc sau nó</b>:</p>
+        <div class="calc">F: LF 6 → LS 5<br>C: 5 → 3   D: 5 → 2   E: 5 → 4<br>B: LF = min(3, 4) = 3 → LS 2<br>A: LF = min(2, 2) = 2 → LS 0</div>`,
+     r:'LF = Min(LS các việc sau); LS = LF − t'},
+    {t:'TF và đường găng',rows:['A','B','C','D','F'],
+     b:`<p>TF = LS − ES (ô giữa hàng dưới). Chỉ <b>E có TF = 1</b>, các việc khác TF = 0.</p>
+        <p>TD của E = ES(F) − EF(E) = 5 − 4 = 1.</p>
+        <p>Nối các việc có TF = 0 sẽ được <b>hai đường găng</b> cùng dài 6:</p>
+        <div class="calc">A → B → C → F<br>A → D → F</div>`,
+     r:'Đường găng gồm các công việc có dự trữ = 0'}
+  ];
+
+  /* ================= player ================= */
+  const MODES={
+    aoa:{steps:AOA_STEPS,render:renderAOA,label:'aria',
+      legend:'<span><i></i>công việc</span><span><i class="d"></i>công việc ảo</span><span><i class="b"></i>cách vẽ sai</span><span><i class="c"></i>đường găng</span>'},
+    aon:{steps:AON_STEPS,render:renderAON,
+      legend:'<span><i></i>quan hệ trước – sau</span><span><i class="c"></i>đường găng</span>'}
+  };
+  const state={mode:'aoa',step:{aoa:0,aon:0},timer:null};
+  const svg=$('svg');
+
+  function draw(){
+    const m=MODES[state.mode],s=state.step[state.mode],st=m.steps[s],N=m.steps.length;
+    while(svg.firstChild)svg.removeChild(svg.firstChild);
+    m.render(svg,s);
+    $('legend').innerHTML=m.legend;
+    $('stepNo').textContent=(state.mode==='aoa'?'AOA':'AON')+' · Bước '+s+' / '+(N-1);
+    $('stepTitle').textContent=st.t;
+    $('stepBody').innerHTML=st.b;
+    const rule=$('stepRule');
+    rule.className='rule'+(st.warn?' warn':'')+(st.ok?' ok':'');
+    rule.innerHTML='<b>'+(st.warn?'Quy tắc bị vi phạm':st.ok?'Kiểm tra':'Quy tắc áp dụng')+'</b>'+st.r;
+    document.querySelectorAll('#prob tbody tr').forEach(tr=>tr.classList.toggle('hl',st.rows.includes(tr.dataset.c)));
+    $('prob').classList.toggle('col-hl',!!st.col);
+    $('counter').textContent=(s+1)+'/'+N;
+    $('prev').disabled=s===0;
+    $('next').disabled=s===N-1;
+    const dots=$('dots');dots.innerHTML='';
+    for(let i=0;i<N;i++){
+      const d=document.createElement('button');
+      d.type='button';d.className='dot'+(i===s?' on':i<s?' done':'');
+      d.setAttribute('aria-label','Tới bước '+i);
+      d.onclick=()=>{stop();go(i)};
+      dots.appendChild(d);
+    }
+    document.querySelectorAll('.tab').forEach(t=>t.setAttribute('aria-selected',String(t.id==='tab-'+state.mode)));
+  }
+  function go(i){
+    const N=MODES[state.mode].steps.length;
+    state.step[state.mode]=Math.max(0,Math.min(N-1,i));draw();
+  }
+  function stop(){if(state.timer){clearInterval(state.timer);state.timer=null}$('play').textContent='▶ Tự chạy'}
+  function play(){
+    if(state.timer){stop();return}
+    const N=MODES[state.mode].steps.length;
+    if(state.step[state.mode]>=N-1)go(0);
+    $('play').textContent='❚❚ Dừng';
+    state.timer=setInterval(()=>{
+      const s=state.step[state.mode];
+      if(s>=MODES[state.mode].steps.length-1){stop();return}
+      go(s+1);
+    },4500);
+  }
+  function setMode(m){stop();state.mode=m;draw();try{history.replaceState(null,'','#'+m)}catch(e){}}
+
+  $('prev').onclick=()=>{stop();go(state.step[state.mode]-1)};
+  $('next').onclick=()=>{stop();go(state.step[state.mode]+1)};
+  $('play').onclick=play;
+  $('tab-aoa').onclick=()=>setMode('aoa');
+  $('tab-aon').onclick=()=>setMode('aon');
+  document.addEventListener('keydown',e=>{
+    if(e.target.closest&&e.target.closest('input,textarea'))return;
+    if(e.key==='ArrowRight'||e.key==='ArrowLeft')e.preventDefault();
+    if(e.key==='ArrowRight'){stop();go(state.step[state.mode]+1)}
+    else if(e.key==='ArrowLeft'){stop();go(state.step[state.mode]-1)}
+  });
+
+  /* theme toggle, remembered per browser */
+  const root=document.documentElement;
+  try{const t=localStorage.getItem('qlda-theme');if(t)root.setAttribute('data-theme',t)}catch(e){}
+  $('themeBtn').onclick=()=>{
+    const cur=root.getAttribute('data-theme')||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');
+    const nx=cur==='dark'?'light':'dark';
+    root.setAttribute('data-theme',nx);
+    try{localStorage.setItem('qlda-theme',nx)}catch(e){}
+  };
+
+  if(location.hash==='#aon')state.mode='aon';
+  draw();
+})();
+</script>

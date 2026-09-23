@@ -1,0 +1,431 @@
+<title>Việc giả trong AOA</title>
+<meta name="description" content="Ba ví dụ về công việc giả (việc ảo) trong sơ đồ AOA: chung gốc và đích, việc trước chồng một phần, và trường hợp cần hai việc giả — mỗi ví dụ vẽ sai trước rồi sửa.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+  :root{
+    --bg:#f6f7fb; --surface:#ffffff; --surface-2:#eef0fc;
+    --ink:#1c2033; --ink-soft:#585e78; --ink-faint:#8388a3; --border:#e1e3f0;
+    --accent:#4a3fd9; --accent-ink:#ffffff; --accent-soft:#ece9ff;
+    --critical:#c8401f; --critical-soft:#fbeae4;
+    --new:#a86400; --new-ink:#7a4900; --new-soft:#fff3d9;
+    --good:#1f7a4d; --good-soft:#e3f4ea;
+    --shadow:0 1px 2px rgba(28,32,51,.04),0 8px 24px rgba(28,32,51,.06);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      color-scheme:dark;
+      --bg:#13141d; --surface:#1a1c28; --surface-2:#232640;
+      --ink:#eef0fb; --ink-soft:#a7acc7; --ink-faint:#767b98; --border:#2d3050;
+      --accent:#9b93ff; --accent-ink:#14152a; --accent-soft:#252a4d;
+      --critical:#ff8465; --critical-soft:#3a231d;
+      --new:#ffcf66; --new-ink:#ffe1a3; --new-soft:#3a2f12;
+      --good:#6fd6a0; --good-soft:#18302a;
+      --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.35);
+    }
+  }
+  :root[data-theme="dark"]{
+    color-scheme:dark;
+    --bg:#13141d; --surface:#1a1c28; --surface-2:#232640;
+    --ink:#eef0fb; --ink-soft:#a7acc7; --ink-faint:#767b98; --border:#2d3050;
+    --accent:#9b93ff; --accent-ink:#14152a; --accent-soft:#252a4d;
+    --critical:#ff8465; --critical-soft:#3a231d;
+    --new:#ffcf66; --new-ink:#ffe1a3; --new-soft:#3a2f12;
+    --good:#6fd6a0; --good-soft:#18302a;
+    --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.35);
+  }
+
+  *{box-sizing:border-box}
+  body{background:var(--bg);color:var(--ink);font-family:"Be Vietnam Pro",system-ui,sans-serif;line-height:1.55;padding-inline:16px}
+  .wrap{max-width:1100px;margin-inline:auto;padding-block:26px 56px}
+  h1{font-size:clamp(1.4rem,4vw,1.9rem);font-weight:800;letter-spacing:-.01em;margin:6px 0 8px;text-wrap:balance}
+  h2{font-size:1.1rem;font-weight:800;margin:0 0 10px;text-wrap:balance}
+  p{margin:0 0 10px;max-width:66ch}
+  .eyebrow{font-family:"IBM Plex Mono",monospace;font-size:.7rem;letter-spacing:.09em;text-transform:uppercase;color:var(--accent);font-weight:600;margin:0 0 6px}
+  .lede{color:var(--ink-soft);max-width:70ch}
+  .top{display:flex;justify-content:space-between;align-items:flex-start;gap:16px}
+  .theme-btn{flex:none;border:1px solid var(--border);background:var(--surface);color:var(--ink);border-radius:999px;padding:7px 12px;font:inherit;font-size:.85rem;cursor:pointer}
+  button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+  /* two-cases summary */
+  .cases{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:18px 0 6px}
+  @media (max-width:760px){.cases{grid-template-columns:1fr}}
+  .case{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:12px 16px;font-size:.88rem;color:var(--ink-soft)}
+  .case b{color:var(--ink)}
+  .case .k{font-family:"IBM Plex Mono",monospace;font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);font-weight:600;display:block;margin-bottom:2px}
+
+  .tabs{display:flex;gap:6px;margin:18px 0 14px;flex-wrap:wrap}
+  .tab{border:1px solid var(--border);background:var(--surface);color:var(--ink-soft);border-radius:10px;padding:9px 14px;font:inherit;font-weight:700;font-size:.9rem;cursor:pointer;display:flex;flex-direction:column;align-items:flex-start;line-height:1.25;text-align:left}
+  .tab small{font-weight:500;font-size:.74rem;color:var(--ink-faint)}
+  .tab[aria-selected="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+  .tab[aria-selected="true"] small{color:var(--accent-ink);opacity:.8}
+
+  /* problem statement for the active example */
+  .de{padding:12px 16px;margin-bottom:14px}
+  .de-head{display:flex;align-items:baseline;gap:4px 12px;flex-wrap:wrap;margin-bottom:6px}
+  .de-head h2{margin:0;font-size:1rem}
+  .de-head span{font-size:.8rem;color:var(--ink-faint)}
+
+  .stage{display:grid;grid-template-columns:1.4fr 1fr;gap:18px;align-items:start}
+  @media (max-width:880px){.stage{grid-template-columns:1fr}}
+  .stage>*{min-width:0}
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:16px;box-shadow:var(--shadow)}
+  .canvas{padding:14px}
+  .svgbox{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .svgbox svg{display:block;width:100%;min-width:580px;height:auto}
+  .legend{display:flex;flex-wrap:wrap;gap:6px 16px;margin:8px 4px 0;font-size:.78rem;color:var(--ink-soft)}
+  .legend span{display:inline-flex;align-items:center;gap:6px}
+  .legend i{display:inline-block;width:22px;height:0;border-top:2px solid var(--ink-soft)}
+  .legend i.d{border-top-style:dashed;border-color:var(--accent)}
+  .legend i.b{border-top-style:dotted;border-color:var(--new)}
+
+  .controls{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:12px;padding-top:12px;border-top:1px solid var(--border)}
+  .btn{border:1px solid var(--border);background:var(--surface-2);color:var(--ink);border-radius:10px;padding:8px 14px;font:inherit;font-weight:700;font-size:.88rem;cursor:pointer}
+  .btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+  .btn:disabled{opacity:.4;cursor:default}
+  .seg{display:flex;gap:4px;margin-left:auto;flex-wrap:wrap}
+  .seg button{border:1px solid var(--border);background:var(--surface);color:var(--ink-soft);border-radius:999px;padding:5px 11px;font:inherit;font-size:.78rem;font-weight:600;cursor:pointer}
+  .seg button.on{background:var(--ink);border-color:var(--ink);color:var(--surface)}
+  .seg button.bad.on{background:var(--new);border-color:var(--new);color:var(--surface)}
+  .seg button.ok.on{background:var(--good);border-color:var(--good);color:var(--surface)}
+  .hint{font-size:.75rem;color:var(--ink-faint);margin-top:8px}
+
+  .panel{padding:18px 20px;display:grid;gap:14px}
+  .step-no{font-family:"IBM Plex Mono",monospace;font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);font-weight:600}
+  .panel h3{margin:2px 0 0;font-size:1.08rem;font-weight:800;text-wrap:balance}
+  .body{font-size:.93rem;color:var(--ink-soft)}
+  .body p{margin:0 0 8px}
+  .body b{color:var(--ink)}
+  .body .calc{font-family:"IBM Plex Mono",monospace;font-size:.84rem;background:var(--surface-2);border-radius:8px;padding:8px 10px;margin:6px 0 8px;color:var(--ink);line-height:1.75}
+  .body ul{margin:4px 0 8px;padding-left:18px;display:grid;gap:3px}
+  .rule{font-size:.84rem;border-radius:10px;padding:9px 12px;background:var(--accent-soft);color:var(--ink)}
+  .rule b{display:block;font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;font-family:"IBM Plex Mono",monospace;color:var(--accent);margin-bottom:2px}
+  .rule.warn{background:var(--new-soft)}
+  .rule.warn b{color:var(--new-ink)}
+  .rule.ok{background:var(--good-soft)}
+  .rule.ok b{color:var(--good)}
+
+  .tblwrap{overflow-x:auto}
+  table{border-collapse:collapse;font-variant-numeric:tabular-nums}
+  table.de-tbl{font-size:.95rem}
+  table.de-tbl th{text-align:left;font-size:.7rem;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-faint);font-weight:600;padding:6px 14px 6px 0;white-space:nowrap;border-bottom:1px solid var(--border)}
+  table.de-tbl td{text-align:center;font-family:"IBM Plex Mono",monospace;min-width:56px;padding:6px 8px;border-bottom:1px solid var(--border);white-space:nowrap}
+  table.de-tbl tr.r-code td{font-weight:800}
+  table.de-tbl tr.r-pre td{font-weight:700}
+  table.de-tbl tr.r-succ td{color:var(--new-ink);font-size:.86rem}
+  table.de-tbl td.hl{background:var(--accent-soft);color:var(--accent)}
+
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:26px}
+  @media (max-width:880px){.grid2{grid-template-columns:1fr}}
+  .grid2>*{min-width:0}
+  .sec{padding:18px 20px}
+  .sec ol,.sec ul{margin:0;padding-left:20px;display:grid;gap:7px;font-size:.9rem;color:var(--ink-soft)}
+  .sec li b{color:var(--ink)}
+
+  /* SVG */
+  svg text{font-family:"Be Vietnam Pro",system-ui,sans-serif}
+  .arr .line{fill:none;stroke:var(--ink-soft);stroke-width:2.2}
+  .arr .head{fill:var(--ink-soft)}
+  .arr .lbl{font-size:16px;font-weight:700;fill:var(--ink)}
+  .arr .lbl tspan.d{font-family:"IBM Plex Mono",monospace;font-weight:500;fill:var(--ink-soft)}
+  .arr.dummy .line{stroke:var(--accent);stroke-width:2.4;stroke-dasharray:8 6}
+  .arr.dummy .head{fill:var(--accent)}
+  .arr.dummy .lbl{fill:var(--accent)}
+  .arr.bad .line{stroke:var(--new);stroke-width:2.8;stroke-dasharray:3 5;stroke-linecap:round}
+  .arr.bad .head{fill:var(--new)}
+  .arr.bad .lbl{fill:var(--new)}
+  .ev circle{fill:var(--surface);stroke:var(--ink-soft);stroke-width:2}
+  .ev.open circle{stroke-dasharray:4 4;stroke:var(--ink-faint)}
+  .ev .num{font-size:18px;font-weight:800;fill:var(--ink);text-anchor:middle}
+  .ev .blank{font-size:14px;fill:var(--ink-faint);text-anchor:middle}
+  .warnbox rect{fill:var(--new-soft);stroke:var(--new);stroke-width:1.5}
+  .warnbox text{font-size:13.5px;font-weight:700;fill:var(--new-ink)}
+  .okbox rect{fill:var(--good-soft);stroke:var(--good);stroke-width:1.5}
+  .okbox text{font-size:13.5px;font-weight:700;fill:var(--good)}
+
+  @keyframes draw{from{stroke-dashoffset:1}to{stroke-dashoffset:0}}
+  @keyframes fade{from{opacity:0}to{opacity:1}}
+  @keyframes pop{0%{opacity:0;transform:scale(.4)}100%{opacity:1;transform:scale(1)}}
+  .anim-draw{stroke-dasharray:1;animation:draw .75s ease-out both;animation-delay:var(--d,0s)}
+  .anim-fade{animation:fade .45s ease-out both;animation-delay:var(--d,0s)}
+  .anim-pop{transform-box:fill-box;transform-origin:center;animation:pop .45s cubic-bezier(.2,.9,.3,1.25) both;animation-delay:var(--d,0s)}
+  @media (prefers-reduced-motion: reduce){.anim-draw,.anim-fade,.anim-pop{animation:none}}
+</style>
+
+<div class="wrap">
+  <div class="top">
+    <div>
+      <p class="eyebrow">Chương 4 · Sơ đồ AOA</p>
+      <h1>Việc giả trong AOA</h1>
+      <p class="lede">Việc giả (việc ảo) có t = 0, vẽ bằng <b>mũi tên nét đứt</b>, không tốn nguồn lực. Nó chỉ dùng để giữ đúng quan hệ trước – sau. Mỗi ví dụ dưới đây vẽ <b>sai</b> trước để thấy vì sao cần việc giả, rồi mới sửa cho <b>đúng</b>.</p>
+    </div>
+    <button class="theme-btn" id="themeBtn" type="button" aria-label="Đổi giao diện sáng/tối">◐ Giao diện</button>
+  </div>
+
+  <div class="cases">
+    <div class="case"><span class="k">Trường hợp 1</span><b>Hai việc chung cả gốc lẫn đích.</b> Hai việc có cùng việc trước và cùng việc sau. Vẽ chung thì cả hai trùng một cặp (i, j), không phân biệt được.</div>
+    <div class="case"><span class="k">Trường hợp 2</span><b>Việc trước chồng nhau một phần.</b> Một việc trước có ở danh sách của việc này nhưng không có ở việc kia. Không có việc giả thì hoặc thiếu quan hệ, hoặc thừa quan hệ.</div>
+  </div>
+
+  <div class="tabs" role="tablist" id="tabs"></div>
+
+  <section class="card de" aria-labelledby="deTitle">
+    <div class="de-head"><h2 id="deTitle">Đề bài</h2><span id="deSub"></span></div>
+    <div class="tblwrap"><table class="de-tbl" id="prob"></table></div>
+  </section>
+
+  <div class="stage">
+    <div class="card canvas">
+      <div class="svgbox"><svg id="svg" viewBox="0 0 720 340" role="img" aria-label="Sơ đồ AOA"></svg></div>
+      <div class="legend"><span><i></i>công việc</span><span><i class="d"></i>việc giả (t = 0)</span><span><i class="b"></i>vẽ sai</span></div>
+      <div class="controls">
+        <button class="btn" id="prev" type="button">← Trước</button>
+        <button class="btn primary" id="next" type="button">Tiếp →</button>
+        <div class="seg" id="seg"></div>
+      </div>
+      <p class="hint">Phím ← → để chuyển bước</p>
+    </div>
+    <div class="card panel">
+      <div><div class="step-no" id="stepNo"></div><h3 id="stepTitle"></h3></div>
+      <div class="body" id="stepBody"></div>
+      <div class="rule" id="stepRule"></div>
+    </div>
+  </div>
+
+  <div class="grid2">
+    <section class="card sec">
+      <h2>Cách phát hiện khi đọc đề</h2>
+      <ol>
+        <li>Lập thêm hàng <b>Việc sau</b> từ hàng “Việc trước”.</li>
+        <li>Tìm hai việc có <b>việc trước giống hệt và việc sau giống hệt</b>. Gặp cặp như vậy là trường hợp 1, cần 1 việc giả.</li>
+        <li>So danh sách việc trước của từng cặp việc. Nếu <b>giao nhau nhưng không trùng</b> (như {A} và {A, B}) thì là trường hợp 2.</li>
+        <li>Nếu một việc cần “hợp” của hai nhóm mà mỗi nhóm lại có việc khác chỉ cần riêng nhóm đó (ví dụ 3), việc đó phải có <b>sự kiện đầu riêng</b> và thường cần 2 việc giả.</li>
+      </ol>
+    </section>
+    <section class="card sec">
+      <h2>Kiểm tra sau khi vẽ</h2>
+      <ul>
+        <li>Không có hai mũi tên nào trùng cùng cặp (i, j).</li>
+        <li>Đứng ở mỗi sự kiện, mọi việc đi ra phải cần <b>đúng</b> các việc đi vào, tính cả việc đi vào qua việc giả, không thừa không thiếu.</li>
+        <li>Việc giả đi <b>từ</b> sự kiện “việc dùng chung xong” <b>tới</b> chỗ bắt đầu của việc cần nhiều hơn.</li>
+        <li>Không vẽ việc giả thừa: bỏ việc giả đi mà quan hệ vẫn đúng thì nó là thừa.</li>
+        <li>Việc giả vẫn tính khi đi xuôi, đi ngược, chỉ là t = 0.</li>
+        <li>AON không bao giờ cần việc giả.</li>
+      </ul>
+    </section>
+  </div>
+</div>
+
+<script>
+(function(){
+  const NS='http://www.w3.org/2000/svg';
+  const $=id=>document.getElementById(id);
+  function el(tag,attrs,parent){const e=document.createElementNS(NS,tag);if(attrs)for(const k in attrs)e.setAttribute(k,attrs[k]);if(parent)parent.appendChild(e);return e}
+  function txt(parent,x,y,s,cls,extra){const t=el('text',Object.assign({x,y,class:cls||''},extra||{}),parent);t.textContent=s;return t}
+  function anim(node,cls,delay){node.classList.add(cls);node.style.setProperty('--d',(delay||0)+'s')}
+  const R=26;
+
+  function arrow(g,a,b,o,isNew,delay){
+    let dx=b.x-a.x,dy=b.y-a.y,L=Math.hypot(dx,dy),ux=dx/L,uy=dy/L;
+    const nx=uy,ny=-ux;
+    let d,sx,sy,ex,ey,tx,ty,lx,ly;
+    const ra=R,rb=R+2;
+    if(o.curve){
+      const cx=(a.x+b.x)/2+nx*o.curve,cy=(a.y+b.y)/2+ny*o.curve;
+      let v1x=cx-a.x,v1y=cy-a.y,l1=Math.hypot(v1x,v1y);sx=a.x+v1x/l1*ra;sy=a.y+v1y/l1*ra;
+      let v2x=cx-b.x,v2y=cy-b.y,l2=Math.hypot(v2x,v2y);ex=b.x+v2x/l2*rb;ey=b.y+v2y/l2*rb;
+      tx=-v2x/l2;ty=-v2y/l2;
+      d=`M${sx} ${sy} Q${cx} ${cy} ${ex} ${ey}`;
+      const mx=.25*sx+.5*cx+.25*ex,my=.25*sy+.5*cy+.25*ey,s=Math.sign(o.curve);
+      lx=mx+nx*17*s;ly=my+ny*17*s;
+    }else{
+      sx=a.x+ux*ra;sy=a.y+uy*ra;ex=b.x-ux*rb;ey=b.y-uy*rb;tx=ux;ty=uy;
+      d=`M${sx} ${sy} L${ex} ${ey}`;
+      const side=o.side||1,off=o.off||17;
+      lx=(sx+ex)/2+nx*off*side;ly=(sy+ey)/2+ny*off*side;
+    }
+    const grp=el('g',{class:'arr'+(o.dummy?' dummy':'')+(o.bad?' bad':'')},g);
+    const attrs={d,class:'line'};if(!o.dummy&&!o.bad)attrs.pathLength='1';
+    const p=el('path',attrs,grp);
+    const hl=12,hw=6,bx=ex-tx*hl,by=ey-ty*hl;
+    const h=el('path',{class:'head',d:`M${ex} ${ey} L${bx+ty*hw} ${by-tx*hw} L${bx-ty*hw} ${by+tx*hw} Z`},grp);
+    const lab=el('text',{x:lx,y:ly+5,class:'lbl','text-anchor':o.anchor||'middle'},grp);
+    lab.textContent=(o.dummy?'giả':o.name)+' ';
+    const ts=el('tspan',{class:'d'},lab);ts.textContent='· '+(o.dummy?0:o.d);
+    if(isNew){
+      if(attrs.pathLength)anim(p,'anim-draw',delay);else anim(p,'anim-fade',delay);
+      anim(h,'anim-fade',delay+.55);anim(lab,'anim-fade',delay+.3);
+    }
+  }
+  function note(g,x,y,lines,cls,delay){
+    const grp=el('g',{class:cls},g);
+    const w=Math.max(...lines.map(l=>l.length))*7.4+20,h=lines.length*19+10;
+    el('rect',{x,y,width:w,height:h,rx:8},grp);
+    lines.forEach((l,i)=>txt(grp,x+10,y+21+i*19,l));
+    anim(grp,'anim-fade',delay);
+  }
+
+  /* ---------------- examples ----------------
+     each step: ev {id:[x,y,label]} (label '' = unnumbered, 'open' = loose end),
+     ar [from,to,name,t,opts], isNew list of arrow names drawn in this step */
+  const EX=[
+  {id:'ex1',tab:'Ví dụ 1',small:'chung gốc và đích',
+   sub:'Trường hợp 1 · t tính bằng ngày',
+   tasks:[['A','',3],['B','A',2],['C','A',4],['D','B,C',1]],
+   steps:[
+    {k:'de',t:'Đọc đề: tìm hai việc “sinh đôi”',hl:['B','C'],
+     ev:{e1:[70,190,''],e2:[230,190,'']},
+     ar:[['e1','e2','A',3,{}]],nw:['A'],
+     b:`<p>So hàng “Việc trước” và “Việc sau”:</p>
+        <div class="calc">B: trước A · sau D<br>C: trước A · sau D</div>
+        <p><b>B và C giống hệt nhau</b> cả việc trước lẫn việc sau. Cả hai sẽ xuất phát từ “A xong” và cùng đổ về “chỗ D bắt đầu”. Đây là dấu hiệu của trường hợp 1.</p>`,
+     r:'Việc có chung việc trước cùng xuất phát từ một sự kiện'},
+    {k:'sai',t:'Vẽ thử: B và C trùng cặp sự kiện',hl:['B','C'],warn:1,
+     ev:{e1:[70,190,''],e2:[230,190,''],e4:[510,190,''],e5:[660,190,'']},
+     ar:[['e1','e2','A',3,{}],['e2','e4','B',2,{bad:1,curve:70}],['e2','e4','C',4,{bad:1,curve:-70}],['e4','e5','D',1,{}]],nw:['B','C','D'],
+     note:[300,26,['✗ B và C cùng đi từ ○ tới ○','→ cùng một cặp (i, j)'],'warnbox'],
+     b:`<p>Nếu vẽ B và C cùng đi từ “A xong” tới “D bắt đầu” thì hai công việc có <b>cùng sự kiện đầu và cùng sự kiện cuối</b>.</p>
+        <p>Khi viết tên việc theo cặp số, cả B và C đều là (2, 3), đọc không biết là việc nào. Máy tính hay bảng tính cũng không phân biệt được.</p>`,
+     r:'Mỗi công việc phải ứng với một cặp sự kiện (i, j) riêng'},
+    {k:'dung',t:'Sửa: B kết thúc riêng, nối bằng việc giả',hl:['B'],ok:1,
+     ev:{e1:[70,190,'1'],e2:[230,190,'2'],e3:[380,75,'3'],e4:[510,190,'4'],e5:[660,190,'5']},
+     ar:[['e1','e2','A',3,{}],['e2','e3','B',2,{}],['e3','e4','',0,{dummy:1}],['e2','e4','C',4,{side:-1}],['e4','e5','D',1,{}]],nw:['B','giả','C'],
+     note:[430,272,['✓ B(2,3) · C(2,4) · giả(3,4)'],'okbox'],
+     b:`<p>Cho B kết thúc ở một <b>sự kiện riêng (3)</b>, rồi nối 3 → 4 bằng <b>việc giả</b>.</p>
+        <div class="calc">A(1,2) B(2,3) C(2,4) giả(3,4) D(4,5)</div>
+        <p>Giờ B và C có cặp số khác nhau. D vẫn chờ cả C (trực tiếp) và B (qua việc giả). Việc giả đặt ở nhánh B hay nhánh C đều đúng.</p>
+        <div class="calc">E4 = max(3+4, 5+0) = 7 → T = 8 ngày</div>`,
+     r:'Việc giả: t = 0, nét đứt, chỉ giữ quan hệ trước – sau'}
+   ]},
+  {id:'ex2',tab:'Ví dụ 2',small:'việc trước chồng một phần',
+   sub:'Trường hợp 2 · t tính bằng ngày',
+   tasks:[['A','',2],['B','',3],['C','A',4],['D','A,B',2]],
+   steps:[
+    {k:'de',t:'Đọc đề: việc trước chồng nhau một phần',hl:['C','D'],
+     ev:{e1:[70,175,'']},ar:[],nw:[],
+     b:`<p>So danh sách việc trước:</p>
+        <div class="calc">C cần {A}<br>D cần {A, B}</div>
+        <p>A có mặt ở cả hai danh sách, còn <b>B chỉ có ở D</b>. Hai danh sách giao nhau nhưng không trùng nhau, đây là dấu hiệu của trường hợp 2.</p>`,
+     r:'So danh sách việc trước: giao nhau nhưng không trùng thì cần việc giả'},
+    {k:'sai',t:'Vẽ thử: không có chỗ nào đúng cho D',hl:['D'],warn:1,
+     ev:{e1:[70,175,''],e2:[250,75,''],e3:[250,275,''],c:[520,75,'open'],d:[520,275,'open']},
+     ar:[['e1','e2','A',2,{}],['e1','e3','B',3,{side:-1}],['e2','c','C',4,{}],['e3','d','D',2,{bad:1}]],nw:['A','B','C','D'],
+     note:[320,150,['✗ D xuất phát sau B → D không chờ A','✗ Gộp A, B chung một sự kiện','   → C phải chờ B (thừa)'],'warnbox'],
+     b:`<p>A kết thúc ở “A xong”, C xuất phát từ đó là đúng. Còn D:</p>
+        <ul><li>Cho D xuất phát từ “B xong” thì D <b>không chờ A</b>, thiếu quan hệ.</li>
+        <li>Gộp A, B về chung một sự kiện rồi cho C, D cùng xuất phát thì C lại <b>phải chờ B</b>, thừa quan hệ so với đề.</li></ul>
+        <p>Chỉ dùng mũi tên thật thì không có cách vẽ nào đúng.</p>`,
+     r:'Một việc chỉ bắt đầu khi tất cả việc trước nó (và chỉ những việc đó) đã xong'},
+    {k:'dung',t:'Sửa: việc giả từ “A xong” sang “B xong”',hl:['A','D'],ok:1,
+     ev:{e1:[70,175,'1'],e2:[250,75,'2'],e3:[250,275,'3'],e4:[560,175,'4']},
+     ar:[['e1','e2','A',2,{}],['e1','e3','B',3,{side:-1}],['e2','e3','',0,{dummy:1,side:-1,off:36}],['e2','e4','C',4,{}],['e3','e4','D',2,{side:-1}]],nw:['giả'],
+     note:[330,300,['✓ D chờ B (trực tiếp) và A (qua việc giả)'],'okbox'],
+     b:`<p>Nối <b>việc giả 2 → 3</b>. Sự kiện 3 giờ nghĩa là “A và B đều xong”.</p>
+        <ul><li>D xuất phát từ 3 nên chờ cả A và B ✓</li><li>C vẫn xuất phát từ 2 nên chỉ chờ A ✓</li></ul>
+        <p><b>Chiều của việc giả:</b> đi từ sự kiện của việc dùng chung (A) sang chỗ bắt đầu của việc cần nhiều hơn (D). Vẽ ngược 3 → 2 thì C phải chờ B, sai.</p>
+        <div class="calc">E3 = max(3, 2+0) = 3 · E4 = max(2+4, 3+2) = 6 → T = 6</div>`,
+     r:'Việc giả đi từ “việc dùng chung xong” tới chỗ bắt đầu của việc cần nhiều hơn'}
+   ]},
+  {id:'ex3',tab:'Ví dụ 3',small:'cần 2 việc giả',
+   sub:'Kết hợp · dạng hay ra trong đề · t tính bằng ngày',
+   tasks:[['A','',3],['B','',2],['C','A',2],['D','A,B',4],['E','B',3]],
+   steps:[
+    {k:'de',t:'Đọc đề: D cần cả hai nhóm',hl:['C','D','E'],
+     ev:{e1:[60,180,'']},ar:[],nw:[],
+     b:`<div class="calc">C cần {A}<br>E cần {B}<br>D cần {A, B}</div>
+        <p>D không thể dùng chung sự kiện đầu với C, vì C không chờ B. D cũng không dùng chung được với E, vì E không chờ A.</p>
+        <p>Vậy D phải có <b>sự kiện đầu riêng</b>.</p>`,
+     r:'Việc có tập việc trước khác mọi việc khác thì cần sự kiện đầu riêng'},
+    {k:'sai',t:'Vẽ thử một việc giả: E bị chờ thừa',hl:['E'],warn:1,
+     ev:{e1:[60,180,''],e2:[230,70,''],e3:[230,290,''],c:[520,40,'open'],d:[520,210,'open'],e:[520,310,'open']},
+     ar:[['e1','e2','A',3,{}],['e1','e3','B',2,{side:-1}],['e2','e3','',0,{dummy:1,side:-1,off:36}],['e2','c','C',2,{}],['e3','d','D',4,{}],['e3','e','E',3,{bad:1,side:-1}]],nw:['A','B','giả','C','D','E'],
+     note:[300,122,['✗ E cũng xuất phát từ ○ này','→ E phải chờ cả A (đề không có)'],'warnbox'],
+     b:`<p>Dùng một việc giả 2 → 3 như ví dụ 2 thì D đúng, nhưng <b>E cũng xuất phát từ 3</b>, nên E phải chờ cả A. Đề chỉ cho E cần B, vậy là thừa quan hệ.</p>
+        <p>Vẽ ngược 3 → 2 thì C phải chờ B, cũng sai.</p>`,
+     r:'Kiểm tra từng sự kiện: việc đi ra phải cần đúng các việc đi vào'},
+    {k:'dung',t:'Sửa: sự kiện riêng cho D và 2 việc giả',hl:['D'],ok:1,
+     ev:{e1:[60,180,'1'],e2:[230,70,'2'],e3:[230,290,'3'],e4:[390,180,'4'],e5:[650,180,'5']},
+     ar:[['e1','e2','A',3,{}],['e1','e3','B',2,{side:-1}],['e2','e4','',0,{dummy:1,side:-1}],['e3','e4','',0,{dummy:1}],['e2','e5','C',2,{}],['e4','e5','D',4,{}],['e3','e5','E',3,{side:-1}]],nw:['giả','D','C','E'],
+     note:[370,284,['✓ C chỉ chờ A · E chỉ chờ B · D chờ cả hai'],'okbox'],
+     b:`<p>Tạo <b>sự kiện 4</b> làm chỗ bắt đầu riêng của D, rồi nối 2 → 4 và 3 → 4 bằng <b>hai việc giả</b>.</p>
+        <div class="calc">A(1,2) B(1,3) giả(2,4) giả(3,4)<br>C(2,5) D(4,5) E(3,5)</div>
+        <p>Không có hai việc nào trùng cặp số, và mỗi việc chờ đúng các việc đề yêu cầu.</p>
+        <div class="calc">E4 = max(3, 2) = 3<br>E5 = max(3+2, 3+4, 2+3) = 7 → T = 7</div>`,
+     r:'Được dùng nhiều việc giả nếu cần, miễn không có việc giả thừa'}
+   ]}
+  ];
+
+  let exI=0,st=0;
+  const svg=$('svg');
+
+  function renderTable(ex,hl){
+    const succ={};ex.tasks.forEach(([c])=>succ[c]=[]);
+    ex.tasks.forEach(([c,p])=>p&&p.split(',').forEach(x=>succ[x].push(c)));
+    const rows=[['r-code','Công việc',t=>t[0]],['r-pre','Việc trước',t=>t[1]||'–'],['r-t','t (ngày)',t=>t[2]],['r-succ','Việc sau*',t=>succ[t[0]].join(',')||'–']];
+    $('prob').innerHTML='<tbody>'+rows.map(([cls,h,f])=>`<tr class="${cls}"><th scope="row">${h}</th>`+ex.tasks.map(t=>`<td class="${hl.includes(t[0])?'hl':''}">${f(t)}</td>`).join('')+'</tr>').join('')+'</tbody>';
+  }
+
+  function draw(){
+    const ex=EX[exI],s=ex.steps[st];
+    while(svg.firstChild)svg.removeChild(svg.firstChild);
+    const ga=el('g',{},svg),ge=el('g',{},svg),gn=el('g',{},svg);
+    let k=0;
+    s.ar.forEach(([f,t,name,d,o])=>{
+      const nm=o.dummy?'giả':name,isNew=s.nw.includes(nm);
+      arrow(ga,{x:s.ev[f][0],y:s.ev[f][1]},{x:s.ev[t][0],y:s.ev[t][1]},Object.assign({name,d},o),isNew,isNew?.35*k++:0);
+    });
+    Object.entries(s.ev).forEach(([id,[x,y,lab]])=>{
+      const g=el('g',{class:'ev'+(lab==='open'?' open':'')},ge);
+      el('circle',{cx:x,cy:y,r:R},g);
+      if(lab&&lab!=='open'){const t=txt(g,x,y+6,lab,'num');if(s.k==='dung')anim(t,'anim-pop',.8+.12*Number(lab))}
+      else if(!lab)txt(g,x,y+5,'?','blank');
+    });
+    if(s.note)note(gn,s.note[0],s.note[1],s.note[2],s.note[3],.35*k+.3);
+
+    renderTable(ex,s.hl);
+    $('deSub').textContent=ex.sub;
+    $('stepNo').textContent=ex.tab+' · Bước '+(st+1)+' / '+ex.steps.length;
+    $('stepTitle').textContent=s.t;
+    $('stepBody').innerHTML=s.b;
+    const rule=$('stepRule');
+    rule.className='rule'+(s.warn?' warn':'')+(s.ok?' ok':'');
+    rule.innerHTML='<b>'+(s.warn?'Quy tắc bị vi phạm':s.ok?'Vẽ đúng':'Quy tắc')+'</b>'+s.r;
+    $('prev').disabled=exI===0&&st===0;
+    $('next').disabled=exI===EX.length-1&&st===ex.steps.length-1;
+    $('next').textContent=st===ex.steps.length-1&&exI<EX.length-1?'Ví dụ tiếp →':'Tiếp →';
+    const seg=$('seg');seg.innerHTML='';
+    [['de','1 · Đề',''],['sai','2 · Vẽ sai','bad'],['dung','3 · Sửa đúng','ok']].forEach(([key,lab,cls],i)=>{
+      const b=document.createElement('button');b.type='button';b.textContent=lab;
+      b.className=cls+(i===st?' on':'');b.onclick=()=>{st=i;draw()};seg.appendChild(b);
+    });
+    const tabs=$('tabs');tabs.innerHTML='';
+    EX.forEach((e,i)=>{
+      const b=document.createElement('button');b.type='button';b.className='tab';b.setAttribute('role','tab');
+      b.setAttribute('aria-selected',String(i===exI));
+      b.innerHTML=e.tab+'<small>'+e.small+'</small>';
+      b.onclick=()=>{exI=i;st=0;draw()};tabs.appendChild(b);
+    });
+  }
+  function step(dir){
+    const n=EX[exI].steps.length;
+    if(dir>0){if(st<n-1)st++;else if(exI<EX.length-1){exI++;st=0}else return}
+    else{if(st>0)st--;else if(exI>0){exI--;st=EX[exI].steps.length-1}else return}
+    draw();
+  }
+  $('prev').onclick=()=>step(-1);
+  $('next').onclick=()=>step(1);
+  document.addEventListener('keydown',e=>{
+    if(e.key==='ArrowRight'||e.key==='ArrowLeft'){e.preventDefault();step(e.key==='ArrowRight'?1:-1)}
+  });
+
+  const root=document.documentElement;
+  try{const t=localStorage.getItem('qlda-theme');if(t)root.setAttribute('data-theme',t)}catch(e){}
+  $('themeBtn').onclick=()=>{
+    const c=root.getAttribute('data-theme')||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');
+    const n=c==='dark'?'light':'dark';root.setAttribute('data-theme',n);
+    try{localStorage.setItem('qlda-theme',n)}catch(e){}
+  };
+  draw();
+})();
+</script>
