@@ -1,0 +1,556 @@
+<title>Vẽ và dùng Gantt</title>
+<meta name="description" content="Học vẽ biểu đồ Gantt triển khai sớm, muộn, điều chỉnh và cách đọc Gantt, qua ví dụ 8 công việc trong slide chương 4 và một bài tự luyện có lời giải.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+  :root{
+    --bg:#f6f7fb; --surface:#ffffff; --surface-2:#eef0fc;
+    --ink:#1c2033; --ink-soft:#585e78; --ink-faint:#8388a3; --border:#e1e3f0; --grid:#eceef7;
+    --accent:#4a3fd9; --accent-ink:#ffffff; --accent-soft:#ece9ff; --plan:#a9a3f0;
+    --critical:#c8401f; --critical-soft:#fbeae4;
+    --new:#a86400; --new-ink:#7a4900; --new-soft:#fff3d9;
+    --good:#1f7a4d; --good-soft:#e3f4ea;
+    --shadow:0 1px 2px rgba(28,32,51,.04),0 8px 24px rgba(28,32,51,.06);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      color-scheme:dark;
+      --bg:#13141d; --surface:#1a1c28; --surface-2:#232640;
+      --ink:#eef0fb; --ink-soft:#a7acc7; --ink-faint:#767b98; --border:#2d3050; --grid:#23263a;
+      --accent:#9b93ff; --accent-ink:#14152a; --accent-soft:#252a4d; --plan:#5b5596;
+      --critical:#ff8465; --critical-soft:#3a231d;
+      --new:#ffcf66; --new-ink:#ffe1a3; --new-soft:#3a2f12;
+      --good:#6fd6a0; --good-soft:#18302a;
+      --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.35);
+    }
+  }
+  :root[data-theme="dark"]{
+    color-scheme:dark;
+    --bg:#13141d; --surface:#1a1c28; --surface-2:#232640;
+    --ink:#eef0fb; --ink-soft:#a7acc7; --ink-faint:#767b98; --border:#2d3050; --grid:#23263a;
+    --accent:#9b93ff; --accent-ink:#14152a; --accent-soft:#252a4d; --plan:#5b5596;
+    --critical:#ff8465; --critical-soft:#3a231d;
+    --new:#ffcf66; --new-ink:#ffe1a3; --new-soft:#3a2f12;
+    --good:#6fd6a0; --good-soft:#18302a;
+    --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.35);
+  }
+  *{box-sizing:border-box}
+  body{background:var(--bg);color:var(--ink);font-family:"Be Vietnam Pro",system-ui,sans-serif;line-height:1.55;padding-inline:16px}
+  .wrap{max-width:1120px;margin-inline:auto;padding-block:26px 56px}
+  h1{font-size:clamp(1.4rem,4vw,1.9rem);font-weight:800;letter-spacing:-.01em;margin:6px 0 8px;text-wrap:balance}
+  h2{font-size:1.1rem;font-weight:800;margin:0 0 10px;text-wrap:balance}
+  p{margin:0 0 10px;max-width:68ch}
+  .eyebrow{font-family:"IBM Plex Mono",monospace;font-size:.7rem;letter-spacing:.09em;text-transform:uppercase;color:var(--accent);font-weight:600;margin:0 0 6px}
+  .lede{color:var(--ink-soft);max-width:72ch}
+  .top{display:flex;justify-content:space-between;align-items:flex-start;gap:16px}
+  .theme-btn{flex:none;border:1px solid var(--border);background:var(--surface);color:var(--ink);border-radius:999px;padding:7px 12px;font:inherit;font-size:.85rem;cursor:pointer}
+  button:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:16px;box-shadow:var(--shadow)}
+
+  .part{margin-top:30px}
+  .part-head{display:flex;align-items:baseline;gap:6px 14px;flex-wrap:wrap;margin-bottom:12px}
+  .part-head h2{font-size:1.3rem;margin:0}
+  .part-head span{font-size:.85rem;color:var(--ink-faint)}
+
+  .theory{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px;margin-top:18px}
+  .th-item{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:12px 16px;font-size:.88rem;color:var(--ink-soft)}
+  .th-item b{color:var(--ink)}
+  .th-item .k{display:block;font-family:"IBM Plex Mono",monospace;font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);font-weight:600;margin-bottom:3px}
+  .th-item .f{display:block;font-family:"IBM Plex Mono",monospace;font-size:.9rem;color:var(--ink);background:var(--surface-2);border-radius:8px;padding:5px 8px;margin:6px 0 2px}
+
+  .de{padding:14px 18px;margin-bottom:14px}
+  .de-head{display:flex;align-items:baseline;gap:4px 12px;flex-wrap:wrap;margin-bottom:8px}
+  .de-head h3{margin:0;font-size:1rem;font-weight:800}
+  .de-head span{font-size:.8rem;color:var(--ink-faint)}
+  .de p{font-size:.9rem;color:var(--ink-soft);margin:8px 0 0}
+  .tblwrap{overflow-x:auto}
+  table{border-collapse:collapse;font-variant-numeric:tabular-nums}
+  table.de-tbl{font-size:.95rem}
+  table.de-tbl th{text-align:left;font-size:.7rem;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-faint);font-weight:600;padding:6px 14px 6px 0;white-space:nowrap;border-bottom:1px solid var(--border)}
+  table.de-tbl td{text-align:center;font-family:"IBM Plex Mono",monospace;min-width:52px;padding:6px 8px;border-bottom:1px solid var(--border);white-space:nowrap;transition:background .2s}
+  table.de-tbl tr.r-code td{font-weight:800}
+  table.de-tbl tr.r-t td{font-weight:700}
+  table.de-tbl tr.r-succ td{color:var(--new-ink);font-size:.86rem}
+  table.de-tbl td.hl{background:var(--accent-soft);color:var(--accent)}
+
+  .stage{display:grid;grid-template-columns:1.5fr 1fr;gap:18px;align-items:start}
+  @media (max-width:900px){.stage{grid-template-columns:1fr}}
+  .stage>*{min-width:0}
+  .canvas{padding:14px}
+  .chapters{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+  .chap{border:1px solid var(--border);background:var(--surface);color:var(--ink-soft);border-radius:999px;padding:5px 11px;font:inherit;font-size:.78rem;font-weight:600;cursor:pointer}
+  .chap.on{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+  .viewbox{overflow-x:auto;-webkit-overflow-scrolling:touch;min-height:180px}
+  .viewbox svg,.solview svg{display:block;width:100%;min-width:600px;height:auto}
+  .legend{display:flex;flex-wrap:wrap;gap:6px 16px;margin:8px 4px 0;font-size:.78rem;color:var(--ink-soft)}
+  .legend span{display:inline-flex;align-items:center;gap:6px}
+  .legend i{display:inline-block;width:22px;height:0;border-top:2px solid var(--ink-soft)}
+  .legend i.c{border-top-width:3px;border-color:var(--critical)}
+  .legend i.bar{height:10px;border:none;border-radius:3px;background:var(--accent)}
+  .legend i.barc{height:10px;border:none;border-radius:3px;background:var(--critical)}
+  .legend i.plan{height:10px;border:none;border-radius:3px;background:var(--plan)}
+  .legend i.sl{border-top:2px dotted var(--ink-faint)}
+  .legend i.g{border-top:3px solid var(--good)}
+  .legend i.d{border-top:2px dashed var(--ink-faint)}
+  .legend i.v{border-top:2px dashed var(--new)}
+  .controls{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:12px;padding-top:12px;border-top:1px solid var(--border)}
+  .btn{border:1px solid var(--border);background:var(--surface-2);color:var(--ink);border-radius:10px;padding:8px 14px;font:inherit;font-weight:700;font-size:.88rem;cursor:pointer}
+  .btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+  .btn:disabled{opacity:.4;cursor:default}
+  .counter{font-family:"IBM Plex Mono",monospace;font-size:.82rem;color:var(--ink-soft);margin-inline:4px}
+  .dots{display:flex;gap:5px;flex-wrap:wrap;margin-left:auto}
+  .dot{width:11px;height:11px;border-radius:50%;border:none;background:var(--border);cursor:pointer;padding:0}
+  .dot.done{background:var(--accent-soft);box-shadow:inset 0 0 0 1.5px var(--accent)}
+  .dot.on{background:var(--accent)}
+  .hint{font-size:.75rem;color:var(--ink-faint);margin-top:8px}
+
+  .panel{padding:18px 20px;display:grid;gap:14px}
+  .step-no{font-family:"IBM Plex Mono",monospace;font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);font-weight:600}
+  .panel h3{margin:2px 0 0;font-size:1.08rem;font-weight:800;text-wrap:balance}
+  .body{font-size:.93rem;color:var(--ink-soft)}
+  .body p{margin:0 0 8px}
+  .body b{color:var(--ink)}
+  .calc{font-family:"IBM Plex Mono",monospace;font-size:.84rem;background:var(--surface-2);border-radius:8px;padding:8px 10px;margin:6px 0 8px;color:var(--ink);line-height:1.75;font-variant-numeric:tabular-nums}
+  .body ul,.sol-body ul,.sol-body ol{margin:4px 0 8px;padding-left:18px;display:grid;gap:3px}
+  .key{background:var(--new-soft);border-radius:10px;padding:9px 12px;margin:8px 0;color:var(--ink)}
+  .key b{color:var(--new-ink)}
+  .rule{font-size:.84rem;border-radius:10px;padding:9px 12px;background:var(--accent-soft);color:var(--ink)}
+  .rule b{display:block;font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;font-family:"IBM Plex Mono",monospace;color:var(--accent);margin-bottom:2px}
+  .rule.warn{background:var(--new-soft)}
+  .rule.warn b{color:var(--new-ink)}
+
+  table.big{font-size:.93rem;width:100%}
+  table.big th,table.big td{text-align:center;padding:7px 6px;border-bottom:1px solid var(--border);white-space:nowrap}
+  table.big th{font-size:.7rem;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-faint);font-weight:600}
+  table.big td{font-family:"IBM Plex Mono",monospace}
+  table.big tr.crit td{color:var(--critical);font-weight:700}
+  table.big tr.focus td{background:var(--accent-soft)}
+  table.big td.pos{background:var(--new-soft);color:var(--new-ink);font-weight:700}
+  table.big td.ghost{color:var(--ink-faint)}
+  .tnote{font-size:.8rem;color:var(--ink-faint);margin-top:6px}
+
+  /* self-practice */
+  .practice{padding:16px 18px}
+  .practice .intro{font-size:.9rem;color:var(--ink-soft);margin:0 0 12px}
+  details.sol{border:1px solid var(--border);border-radius:12px;margin-top:10px;background:var(--surface)}
+  details.sol summary{cursor:pointer;padding:11px 14px;font-weight:700;font-size:.93rem;list-style:none;display:flex;align-items:center;gap:10px}
+  details.sol summary::-webkit-details-marker{display:none}
+  details.sol summary::before{content:"+";font-family:"IBM Plex Mono",monospace;width:22px;height:22px;border-radius:6px;background:var(--accent-soft);color:var(--accent);display:inline-grid;place-items:center;flex:none}
+  details.sol[open] summary::before{content:"−"}
+  details.sol summary small{font-weight:500;color:var(--ink-faint);font-size:.78rem;margin-left:auto}
+  .sol-body{padding:0 14px 14px;font-size:.9rem;color:var(--ink-soft)}
+  .sol-body b{color:var(--ink)}
+  .solview{overflow-x:auto;margin-top:8px}
+
+  /* SVG */
+  svg text{font-family:"Be Vietnam Pro",system-ui,sans-serif}
+  .g-grid{stroke:var(--grid);stroke-width:1}
+  .g-grid.major{stroke:var(--border)}
+  .g-axis{font-family:"IBM Plex Mono",monospace;font-size:10.5px;fill:var(--ink-faint);text-anchor:middle}
+  .g-row{font-size:12.5px;font-weight:700;fill:var(--ink)}
+  .g-row.crit{fill:var(--critical)}
+  .bar{fill:var(--accent)}
+  .bar.crit{fill:var(--critical)}
+  .bar.plan{fill:var(--plan)}
+  .bar.forecast{fill:var(--critical);opacity:.45}
+  .bar-txt{font-size:11.5px;font-weight:700;fill:var(--surface);text-anchor:middle;pointer-events:none}
+  .slack{stroke:var(--ink-faint);stroke-width:2;stroke-dasharray:2 4;stroke-linecap:round;fill:none}
+  .slack-end{stroke:var(--ink-faint);stroke-width:2}
+  .slack-lbl{font-family:"IBM Plex Mono",monospace;font-size:10.5px;fill:var(--ink-soft)}
+  .link{stroke:var(--ink-soft);stroke-width:1.4;fill:none}
+  .link-head{fill:var(--ink-soft)}
+  .tline{stroke:var(--critical);stroke-width:1.5;stroke-dasharray:4 3}
+  .tline-lbl{font-family:"IBM Plex Mono",monospace;font-size:11px;font-weight:600;fill:var(--critical)}
+  .vline{stroke:var(--new);stroke-width:2;stroke-dasharray:6 4}
+  .vline-lbl{font-size:11.5px;font-weight:700;fill:var(--new)}
+  .arr .line{fill:none;stroke:var(--ink-soft);stroke-width:2}
+  .arr .head{fill:var(--ink-soft)}
+  .arr.crit .line{stroke:var(--critical);stroke-width:3}
+  .arr.crit .head{fill:var(--critical)}
+  .node rect.box{fill:var(--surface);stroke:var(--ink-soft);stroke-width:2}
+  .node.crit rect.box{stroke:var(--critical);stroke-width:3}
+  .node .sep{stroke:var(--border);stroke-width:1.2}
+  .node .name{font-size:19px;font-weight:800;text-anchor:middle;fill:var(--ink)}
+  .node.crit .name{fill:var(--critical)}
+  .node .cell{font-family:"IBM Plex Mono",monospace;font-size:16px;font-weight:700;text-anchor:middle;fill:var(--ink)}
+  .node .cell.ph{font-size:10.5px;font-weight:500;fill:var(--ink-faint)}
+  .node .cell.es{fill:var(--accent)}
+  .node .cell.lf{fill:var(--new)}
+  .node .cell.tf{fill:var(--ink-soft)}
+  .node.crit .cell.tf{fill:var(--critical)}
+  .tag{font-family:"IBM Plex Mono",monospace;font-size:12px;fill:var(--ink-faint)}
+  .d-grid{stroke:var(--grid);stroke-width:1}
+  .d-axis{stroke:var(--ink);stroke-width:2.2}
+  .d-diag{stroke:var(--ink-faint);stroke-width:2;stroke-dasharray:8 6}
+  .d-tick{font-family:"IBM Plex Mono",monospace;font-size:11px;fill:var(--ink-faint);text-anchor:middle}
+  .d-title{font-size:12.5px;font-weight:600;fill:var(--ink-soft)}
+  .d-seg{stroke-width:5;stroke-linecap:round;fill:none}
+  .d-seg.ok{stroke:var(--accent)}
+  .d-seg.fast{stroke:var(--good)}
+  .d-seg.slow{stroke:var(--critical)}
+  .d-dot{fill:var(--ink)}
+  .d-guide{stroke:var(--new);stroke-width:1.5;stroke-dasharray:4 4}
+  .d-lbl{font-size:12.5px;font-weight:700}
+  .d-lbl.ok{fill:var(--accent)} .d-lbl.fast{fill:var(--good)} .d-lbl.slow{fill:var(--critical)}
+  .d-pt{font-family:"IBM Plex Mono",monospace;font-size:11px;font-weight:600;fill:var(--new)}
+
+  @keyframes draw{from{stroke-dashoffset:1}to{stroke-dashoffset:0}}
+  @keyframes fade{from{opacity:0}to{opacity:1}}
+  @keyframes pop{0%{opacity:0;transform:scale(.4)}100%{opacity:1;transform:scale(1)}}
+  @keyframes valpop{0%{opacity:0;transform:translateY(-6px) scale(1.6)}100%{opacity:1;transform:none}}
+  @keyframes grow{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+  @keyframes cellin{0%{opacity:0;background:var(--new-soft)}100%{opacity:1}}
+  .anim-draw{stroke-dasharray:1;animation:draw .7s ease-out both;animation-delay:var(--d,0s)}
+  .anim-fade{animation:fade .45s ease-out both;animation-delay:var(--d,0s)}
+  .anim-pop{transform-box:fill-box;transform-origin:center;animation:pop .45s cubic-bezier(.2,.9,.3,1.25) both;animation-delay:var(--d,0s)}
+  .anim-val{transform-box:fill-box;transform-origin:center;animation:valpop .55s ease-out both;animation-delay:var(--d,0s)}
+  .anim-grow{transform-box:fill-box;transform-origin:left center;animation:grow .55s ease-out both;animation-delay:var(--d,0s)}
+  .anim-cell{animation:cellin .6s ease-out both;animation-delay:var(--d,0s)}
+  @media (prefers-reduced-motion: reduce){.anim-draw,.anim-fade,.anim-pop,.anim-val,.anim-grow,.anim-cell{animation:none}}
+</style>
+
+<div class="wrap">
+  <div class="top">
+    <div>
+      <p class="eyebrow">Chương 4 · Biểu đồ Gantt</p>
+      <h1>Vẽ và dùng Gantt</h1>
+      <p class="lede">Học theo thứ tự: tính thời gian → kẻ khung → vẽ thanh → tô găng → Gantt muộn → Gantt điều chỉnh → đọc biểu đồ. Ví dụ là bài Gantt trong slide (8 công việc, đơn vị tuần).</p>
+    </div>
+    <button class="theme-btn" id="themeBtn" type="button" aria-label="Đổi giao diện sáng/tối">◐ Giao diện</button>
+  </div>
+
+  <div class="theory"><div class="th-item"><span class="k">Gantt sớm</span>Thanh bắt đầu tại <b>ES</b>. Dự trữ vẽ nét chấm <b>sau</b> thanh, từ EF tới LF.</div><div class="th-item"><span class="k">Gantt muộn</span>Thanh bắt đầu tại <b>LS</b>. Dự trữ nằm <b>trước</b> thanh. Việc găng không đổi chỗ.</div><div class="th-item"><span class="k">Gantt điều chỉnh</span>Việc nối tiếp nhau vẽ <b>chung một dòng</b>, việc song song vẽ dòng khác, thêm mũi tên nhập nhánh.</div><div class="th-item"><span class="k">Đọc Gantt</span>Kẻ đường dọc tại thời điểm cần xét: thanh nào cắt đường đó là việc đang làm.</div></div>
+
+  <section class="part" aria-labelledby="exTitle">
+    <div class="part-head"><h2 id="exTitle">Ví dụ có lời giải</h2><span>bấm Tiếp để xem từng bước</span></div>
+    <div class="card de">
+      <div class="de-head"><h3>Đề bài</h3><span>slide chương 4 · thời gian tính bằng tuần</span></div>
+      <div class="tblwrap"><table class="de-tbl" id="deTbl"></table></div>
+      <p>A: xây bộ phận bên trong · B: sửa mái và sàn · C: xây ống gom khói · D: đổ bê tông, xây khung · E: xây cửa lò chịu nhiệt · F: lắp hệ thống kiểm soát · G: lắp thiết bị lọc khí · H: kiểm tra, thử nghiệm. <i>*Hàng “Việc sau” tự suy ra.</i></p>
+    </div>
+    <div class="chapters" id="chapters"></div>
+    <div class="stage">
+      <div class="card canvas">
+        <div class="viewbox" id="view"></div>
+        <div class="legend" id="legend"></div>
+        <div class="controls">
+          <button class="btn" id="prev" type="button">← Trước</button>
+          <button class="btn primary" id="next" type="button">Tiếp →</button>
+          <span class="counter" id="counter"></span>
+          <div class="dots" id="dots"></div>
+        </div>
+        <p class="hint">Phím ← → để chuyển bước · bấm tên bước ở trên để nhảy tới</p>
+      </div>
+      <div class="card panel">
+        <div><div class="step-no" id="stepNo"></div><h3 id="stepTitle"></h3></div>
+        <div class="body" id="stepBody"></div>
+        <div class="rule" id="stepRule"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="part" aria-labelledby="prTitle">
+    <div class="part-head"><h2 id="prTitle">Bài tự luyện</h2><span>tự làm ra giấy trước, rồi mở từng bước để đối chiếu</span></div>
+    <div class="card practice">
+      <p class="intro"><b>Đề:</b> Dự án gồm 6 công việc, đơn vị ngày. Tính thời gian, vẽ Gantt triển khai sớm và muộn, rồi nhận xét.</p><div class="tblwrap"><table class="de-tbl"><tbody><tr class="r-code"><th scope="row">Công việc</th><td>A</td><td>B</td><td>C</td><td>D</td><td>E</td><td>F</td></tr><tr class=""><th scope="row">Việc trước</th><td>–</td><td>–</td><td>A</td><td>B</td><td>C,D</td><td>D</td></tr><tr class="r-t"><th scope="row">t (ngày)</th><td>3</td><td>2</td><td>4</td><td>3</td><td>2</td><td>5</td></tr></tbody></table></div><details class="sol"><summary>Bước 1 · Đi xuôi: ES, EF<small>lấy MAX</small></summary><div class="sol-body"><div class="calc">A 0→3 · B 0→2<br>C 3→7 · D 2→5<br>E: max(EF C 7, EF D 5) = 7 → 9<br>F 5→10</div><p><b>T = 10 ngày</b> (EF lớn nhất là của F).</p></div></details><details class="sol"><summary>Bước 2 · Đi ngược: LS, LF, TF<small>lấy MIN</small></summary><div class="sol-body"><div class="solview" data-render="gt"></div><div class="calc">F: 10→5 · E: 10→8<br>C: LF = LS(E) = 8 → 4<br>D: LF = min(LS E 8, LS F 5) = 5 → 2<br>B: 2→0 · A: LF = LS(C) = 4 → 1</div><p>Việc găng (TF = 0): <b>B, D, F</b>. A, C, E dư 1 ngày.</p></div></details><details class="sol"><summary>Bước 3 · Gantt triển khai sớm<small>thanh bắt đầu tại ES</small></summary><div class="sol-body"><div class="solview" data-render="ge"></div><p>Kẻ trục 0 → 10. Mỗi việc một dòng, thanh bắt đầu ở ES và dài đúng t. Tô đỏ B, D, F. Nét chấm sau A, C, E là 1 ngày dự trữ.</p></div></details><details class="sol"><summary>Bước 4 · Gantt triển khai muộn<small>thanh bắt đầu tại LS</small></summary><div class="sol-body"><div class="solview" data-render="gl"></div><p>Chỉ A, C, E dịch sang phải 1 ngày. Việc găng đứng yên.</p></div></details><details class="sol"><summary>Bước 5 · Nhận xét như khi viết bài<small>đọc biểu đồ</small></summary><div class="sol-body"><ul><li>Đường găng <b>B → D → F</b> = 2 + 3 + 5 = 10 ngày.</li><li>A, C, E có TF = 1. Riêng A và C nối tiếp nhau, dùng chung 1 ngày dư: A chậm 1 ngày thì C hết dự trữ (A có TD = 0).</li><li>Kẻ đường dọc tại cuối ngày 4: đang làm <b>C</b> (3 → 7) và <b>D</b> (2 → 5).</li><li>Cần giám sát chặt B, D, F. Nếu D chậm 2 ngày, dự án chậm 2 ngày.</li></ul></div></details>
+    </div>
+  </section>
+</div>
+
+<script>
+
+const NS='http://www.w3.org/2000/svg';
+const $=id=>document.getElementById(id);
+function el(tag,attrs,parent){const e=document.createElementNS(NS,tag);if(attrs)for(const k in attrs)e.setAttribute(k,attrs[k]);if(parent)parent.appendChild(e);return e}
+function txt(parent,x,y,s,cls,extra){const t=el('text',Object.assign({x,y,class:cls||''},extra||{}),parent);t.textContent=s;return t}
+function anim(n,cls,d){if(!n)return;n.classList.add(cls);n.style.setProperty('--d',(d||0)+'s')}
+function svgRoot(view,w,h,label){return el('svg',{viewBox:`0 0 ${w} ${h}`,role:'img','aria-label':label||''},view)}
+const fmt=v=>Number.isInteger(v)?String(v):String(Math.round(v*100)/100).replace('.',',');
+
+/* critical path method on [[code, 'P,Q', t], ...] */
+function cpm(raw){
+  const T={},ORDER=raw.map(r=>r[0]);
+  raw.forEach(([c,p,t],i)=>{T[c]={c,t,pre:p?p.split(','):[],succ:[],i}});
+  ORDER.forEach(c=>T[c].pre.forEach(p=>T[p].succ.push(c)));
+  ORDER.forEach(c=>{const x=T[c];x.ES=x.pre.length?Math.max(...x.pre.map(p=>T[p].EF)):0;x.EF=x.ES+x.t});
+  const TDA=Math.max(...ORDER.map(c=>T[c].EF));
+  [...ORDER].reverse().forEach(c=>{const x=T[c];x.LF=x.succ.length?Math.min(...x.succ.map(s=>T[s].LS)):TDA;x.LS=x.LF-x.t});
+  ORDER.forEach(c=>{const x=T[c];x.TF=x.LS-x.ES;x.minES=x.succ.length?Math.min(...x.succ.map(s=>T[s].ES)):TDA;x.TD=x.minES-x.EF;x.crit=x.TF===0});
+  return {T,ORDER,TDA,list:ORDER.map(c=>T[c])};
+}
+
+function deTable(tbl,cols,rows){
+  tbl.innerHTML='<tbody>'+cols.map(col=>`<tr class="${col.cls||''}"><th scope="row">${col.h}</th>`+rows.map(r=>`<td data-c="${r.c}">${col.f(r)}</td>`).join('')+'</tr>').join('')+'</tbody>';
+}
+function hlDe(tbl,codes){if(tbl)tbl.querySelectorAll('td[data-c]').forEach(td=>td.classList.toggle('hl',codes.includes(td.dataset.c)))}
+
+function dataTable(view,o){
+  let h='<div class="tblwrap"><table class="big"><thead><tr>'+o.head.map(x=>`<th>${x}</th>`).join('')+'</tr></thead><tbody>';
+  o.rows.forEach((r,i)=>{
+    h+=`<tr class="${(o.crit||[]).includes(i)?'crit':''} ${(o.hl||[]).includes(i)?'focus':''}">`;
+    r.forEach((c,j)=>{
+      if(o.shown!=null&&j>=o.shown){h+='<td class="ghost">·</td>';return}
+      const isNew=o.newFrom!=null&&j>=o.newFrom&&o.animate!==false;
+      const pos=(o.pos||[]).includes(j)&&parseFloat(String(c).replace(',','.'))>0;
+      h+=`<td class="${pos?'pos ':''}${isNew?'anim-cell':''}"${isNew?` style="--d:${(.07*i+.1*(j-o.newFrom)).toFixed(2)}s"`:''}>${c}</td>`;
+    });
+    h+='</tr>';
+  });
+  h+='</tbody></table></div>';
+  if(o.note)h+=`<p class="tnote">${o.note}</p>`;
+  view.insertAdjacentHTML('beforeend',h);
+}
+
+/* Gantt chart; rows: {label, crit, bars:[{s,d,crit,cls,txt,y,h}], slack:[[a,b,label]]} */
+function gantt(view,o){
+  const T=o.T,K=o.unit||Math.max(24,Math.min(56,Math.floor(680/T))),X0=o.labelW||64,top=44,rh=o.rowH||34,bh=o.barH||22;
+  const rows=o.rows,n=rows.length,W=X0+T*K+60,H=top+n*rh+30;
+  const svg=svgRoot(view,W,H,o.label||'Biểu đồ Gantt');
+  const gx=h=>X0+h*K,tick=o.tick||(T>16?3:1),A=o.animate!==false;
+  for(let h=0;h<=T;h++){
+    el('line',{x1:gx(h),y1:top-6,x2:gx(h),y2:top+n*rh,class:'g-grid'+(h%tick===0?' major':'')},svg);
+    if(h%tick===0)txt(svg,gx(h),top-12,h,'g-axis');
+  }
+  if(o.unitLabel)txt(svg,X0-8,top-12,o.unitLabel,'g-axis',{'text-anchor':'end'});
+  (o.tlines||[]).forEach(v=>{el('line',{x1:gx(v),y1:top-6,x2:gx(v),y2:top+n*rh,class:'tline'},svg);txt(svg,gx(v),top-28,'T = '+v,'tline-lbl',{'text-anchor':'middle'})});
+  rows.forEach((r,i)=>{
+    const y=top+i*rh+(rh-bh)/2;
+    txt(svg,8,top+i*rh+rh/2+4,r.label,'g-row'+(r.crit?' crit':''));
+    (r.slack||[]).forEach(([a,b,lab])=>{
+      if(b<=a)return;
+      const l=el('line',{x1:gx(a)+3,y1:y+bh/2,x2:gx(b),y2:y+bh/2,class:'slack'},svg);
+      const e=el('line',{x1:gx(b),y1:y+bh/2-5,x2:gx(b),y2:y+bh/2+5,class:'slack-end'},svg);
+      const t=lab?txt(svg,(gx(a)+gx(b))/2,y+bh/2-6,lab,'slack-lbl',{'text-anchor':'middle'}):null;
+      if(A){const d=(o.rowDelay||.08)*i+.6;[l,e,t].forEach(q=>anim(q,'anim-fade',d))}
+    });
+    (r.bars||[]).forEach(b=>{
+      const by=b.y!=null?top+i*rh+b.y:y,bhh=b.h||bh;
+      const rect=el('rect',{x:gx(b.s),y:by,width:Math.max(b.d*K,2),height:bhh,rx:4,class:'bar'+(b.cls?' '+b.cls:'')+(b.crit?' crit':'')},svg);
+      const t=(b.txt&&b.d*K>=34)?txt(svg,gx(b.s)+b.d*K/2,by+bhh/2+4,b.txt,'bar-txt'):null;
+      if(A&&!b.still){const d=o.rowDelay!=null?o.rowDelay*i:.04*b.s+.04*i;anim(rect,'anim-grow',d);anim(t,'anim-fade',d+.35)}
+    });
+  });
+  (o.links||[]).forEach(l=>{
+    const x=gx(l.x),yf=top+l.from*rh+rh/2,yt=top+l.to*rh+rh/2,dir=yt>yf?1:-1;
+    const y1=yf+dir*(bh/2),y2=yt-dir*(bh/2+1);
+    const p=el('path',{d:`M${x} ${y1} L${x} ${y2-dir*8}`,class:'link'},svg);
+    const hd=el('path',{d:`M${x} ${y2} L${x-4.5} ${y2-dir*9} L${x+4.5} ${y2-dir*9} Z`,class:'link-head'},svg);
+    if(A){anim(p,'anim-fade',.9);anim(hd,'anim-fade',.9)}
+  });
+  if(o.vline){
+    const x=gx(o.vline.x);
+    const l=el('line',{x1:x,y1:top-6,x2:x,y2:top+n*rh+4,class:'vline'},svg);
+    const t=txt(svg,x,top+n*rh+20,o.vline.label,'vline-lbl',{'text-anchor':'middle'});
+    if(A){anim(l,'anim-fade',.4);anim(t,'anim-fade',.4)}
+  }
+  return svg;
+}
+
+/* AON network; o: {G, pos:{A:[x,y]}, vb:[w,h], vals 0..3, animate:level, crit, drawNew, endY:{'A>B':dy}} */
+function aon(view,o){
+  const W=120,H=86,G=o.G;
+  const svg=svgRoot(view,o.vb[0],o.vb[1],'Sơ đồ AON');
+  const ga=el('g',{},svg),gn=el('g',{},svg);
+  G.ORDER.forEach(c=>G.T[c].succ.forEach(s=>{
+    const a=o.pos[c],b=o.pos[s],ax=a[0]+W/2,ay=a[1],bx=b[0]-W/2,by=b[1]+((o.endY||{})[c+'>'+s]||0);
+    const dx=bx-ax,dy=by-ay,L=Math.hypot(dx,dy),ux=dx/L,uy=dy/L,ex=bx-ux,ey=by-uy;
+    const crit=o.crit&&G.T[c].crit&&G.T[s].crit&&G.T[c].EF===G.T[s].ES;
+    const g=el('g',{class:'arr'+(crit?' crit':'')},ga);
+    const p=el('path',{d:`M${ax} ${ay} L${ex} ${ey}`,class:'line',pathLength:'1'},g);
+    const hl=10,hw=5,hx=ex-ux*hl,hy=ey-uy*hl;
+    const h=el('path',{class:'head',d:`M${ex} ${ey} L${hx+uy*hw} ${hy-ux*hw} L${hx-uy*hw} ${hy+ux*hw} Z`},g);
+    if(o.drawNew){anim(p,'anim-draw',.12*G.T[c].i);anim(h,'anim-fade',.12*G.T[c].i+.55)}
+  }));
+  G.ORDER.forEach(c=>{
+    const x=G.T[c],[cx,cy]=o.pos[c],x0=cx-W/2,y0=cy-H/2,cw=W/3;
+    const g=el('g',{class:'node'+(o.crit&&x.crit?' crit':'')},gn);
+    el('rect',{x:x0,y:y0,width:W,height:H,rx:8,class:'box'},g);
+    el('line',{x1:x0,y1:cy-14,x2:x0+W,y2:cy-14,class:'sep'},g);
+    el('line',{x1:x0,y1:cy+14,x2:x0+W,y2:cy+14,class:'sep'},g);
+    [1,2].forEach(i=>{el('line',{x1:x0+cw*i,y1:y0,x2:x0+cw*i,y2:cy-14,class:'sep'},g);el('line',{x1:x0+cw*i,y1:cy+14,x2:x0+cw*i,y2:y0+H,class:'sep'},g)});
+    txt(g,cx,cy+7,c,'name');
+    const xs=[x0+cw/2,cx,x0+cw*2.5],ty=cy-23,by=cy+35,n=G.ORDER.length;
+    txt(g,xs[1],ty,fmt(x.t),'cell');
+    const fw=.2+.3*x.i,bw=.2+.3*(n-1-x.i);
+    const put=(px,py,val,ph,cls,lvl,d)=>{
+      if(o.vals>=lvl){const t=txt(g,px,py,fmt(val),'cell '+cls);if(o.animate===lvl)anim(t,'anim-val',d)}
+      else txt(g,px,py-1,ph,'cell ph');
+    };
+    put(xs[0],ty,x.ES,'ES','es',1,fw);put(xs[2],ty,x.EF,'EF','es',1,fw+.12);
+    put(xs[2],by,x.LF,'LF','lf',2,bw);put(xs[0],by,x.LS,'LS','lf',2,bw+.12);
+    put(xs[1],by,x.TF,'TF','tf',3,.15+.1*x.i);
+    if(o.drawNew)anim(g,'anim-pop',.12*x.i);
+  });
+  txt(gn,14,o.vb[1]-8,'Ô: ES | t | EF  ·  tên việc  ·  LS | TF | LF','tag');
+  return svg;
+}
+
+/* Diagonal chart: x = actual (thực tế), y = plan (kế hoạch); pts cumulative from [0,0] */
+function diag(view,o){
+  const n=o.n,u=o.unit||Math.floor(480/n),ox=64,top=40,oy=top+n*u,W=ox+n*u+150,H=oy+50;
+  const svg=svgRoot(view,W,H,'Biểu đồ đường chéo');
+  const X=v=>ox+v*u,Y=v=>oy-v*u;
+  for(let i=0;i<=n;i++){
+    el('line',{x1:X(i),y1:Y(0),x2:X(i),y2:Y(n),class:'d-grid'},svg);
+    el('line',{x1:X(0),y1:Y(i),x2:X(n),y2:Y(i),class:'d-grid'},svg);
+    txt(svg,X(i),oy+17,i,'d-tick');
+    txt(svg,ox-12,Y(i)+4,i,'d-tick',{'text-anchor':'end'});
+  }
+  el('line',{x1:X(0),y1:Y(0),x2:X(n),y2:Y(0),class:'d-axis'},svg);
+  el('line',{x1:X(0),y1:Y(0),x2:X(0),y2:Y(n),class:'d-axis'},svg);
+  const dl=el('line',{x1:X(0),y1:Y(0),x2:X(n),y2:Y(n),class:'d-diag'},svg);
+  txt(svg,X(n)+6,Y(n)+4,'đường chéo','d-title');
+  txt(svg,X(n)+6,Y(n)+19,'(đúng kế hoạch)','d-title');
+  txt(svg,X(n),oy+38,'Thực tế (tuần) →','d-title',{'text-anchor':'end'});
+  txt(svg,ox-8,top-16,'↑ Kế hoạch (tuần)','d-title');
+  if(o.drawAxes)anim(dl,'anim-fade',.3);
+  const show=o.show||0,pts=o.pts;
+  for(let i=0;i<show;i++){
+    const [x1,y1]=pts[i],[x2,y2]=pts[i+1],dx=x2-x1,dy=y2-y1;
+    const kind=dy>dx?'fast':dy<dx?'slow':'ok';
+    const isNew=o.animate&&i===show-1;
+    const seg=el('line',{x1:X(x1),y1:Y(y1),x2:X(x2),y2:Y(y2),class:'d-seg '+kind,pathLength:'1'},svg);
+    const dot=el('circle',{cx:X(x2),cy:Y(y2),r:5.5,class:'d-dot'},svg);
+    const mx=(X(x1)+X(x2))/2,my=(Y(y1)+Y(y2))/2;
+    const word=kind==='fast'?'nhanh '+(dy-dx):kind==='slow'?'chậm '+(dx-dy):'đúng hạn';
+    const lab=kind==='slow'?txt(svg,mx+10,my+18,(o.names?o.names[i]:'CV'+(i+1))+' · '+word,'d-lbl '+kind):
+      txt(svg,mx-10,my-8,(o.names?o.names[i]:'CV'+(i+1))+' · '+word,'d-lbl '+kind,{'text-anchor':'end'});
+    if(isNew){
+      const g1=el('line',{x1:X(x2),y1:Y(y2),x2:X(x2),y2:Y(0),class:'d-guide'},svg);
+      const g2=el('line',{x1:X(x2),y1:Y(y2),x2:X(0),y2:Y(y2),class:'d-guide'},svg);
+      const pt=txt(svg,X(x2)+8,Y(y2)-8,`(${x2} ; ${y2})`,'d-pt');
+      anim(g1,'anim-fade',0);anim(g2,'anim-fade',0);anim(pt,'anim-fade',.2);
+      anim(seg,'anim-draw',.5);anim(dot,'anim-pop',1.1);anim(lab,'anim-fade',1.1);
+    }
+  }
+  return svg;
+}
+
+/* stepper for the worked example */
+function runStepper(STEPS,deTbl){
+  let cur=0;const view=$('view');
+  function draw(){
+    const st=STEPS[cur],N=STEPS.length;
+    view.innerHTML='';st.render(view);
+    $('legend').innerHTML=st.legend||'';
+    $('stepNo').textContent='Bước '+cur+' / '+(N-1)+' · '+st.chap;
+    $('stepTitle').textContent=st.t;
+    $('stepBody').innerHTML=st.b;
+    const r=$('stepRule');r.className='rule'+(st.warn?' warn':'');r.innerHTML='<b>'+(st.warn?'Chỗ hay sai':'Quy tắc')+'</b>'+st.r;
+    hlDe(deTbl,st.hl||[]);
+    $('counter').textContent=(cur+1)+'/'+N;
+    $('prev').disabled=cur===0;$('next').disabled=cur===N-1;
+    const dots=$('dots'),ch=$('chapters');dots.innerHTML='';ch.innerHTML='';
+    STEPS.forEach((s,i)=>{
+      const d=document.createElement('button');d.type='button';d.className='dot'+(i===cur?' on':i<cur?' done':'');
+      d.setAttribute('aria-label','Tới bước '+i+': '+s.chap);d.onclick=()=>go(i);dots.appendChild(d);
+      const c=document.createElement('button');c.type='button';c.className='chap'+(i===cur?' on':'');c.textContent=s.chap;c.onclick=()=>go(i);ch.appendChild(c);
+    });
+  }
+  function go(i){cur=Math.max(0,Math.min(STEPS.length-1,i));draw()}
+  $('prev').onclick=()=>go(cur-1);$('next').onclick=()=>go(cur+1);
+  document.addEventListener('keydown',e=>{
+    if(e.target.closest&&e.target.closest('summary,input,textarea'))return;
+    if(e.key==='ArrowRight'||e.key==='ArrowLeft'){e.preventDefault();go(cur+(e.key==='ArrowRight'?1:-1))}
+  });
+  draw();
+}
+
+/* practice: each solution renders its figure the first time it is opened */
+function wirePractice(RENDERS){
+  document.querySelectorAll('details.sol').forEach(d=>d.addEventListener('toggle',()=>{
+    if(!d.open)return;
+    d.querySelectorAll('.solview[data-render]').forEach(v=>{if(!v.dataset.done){RENDERS[v.dataset.render](v);v.dataset.done='1'}});
+  }));
+}
+
+(function(){
+  const root=document.documentElement;
+  try{const t=localStorage.getItem('qlda-theme');if(t)root.setAttribute('data-theme',t)}catch(e){}
+  $('themeBtn').onclick=()=>{
+    const c=root.getAttribute('data-theme')||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');
+    const n=c==='dark'?'light':'dark';root.setAttribute('data-theme',n);
+    try{localStorage.setItem('qlda-theme',n)}catch(e){}
+  };
+})();
+
+
+const G=cpm([['A','',2],['B','',3],['C','A',2],['D','B',4],['E','C',4],['F','C',3],['G','D,E',5],['H','F,G',2]]);
+deTable($('deTbl'),[{h:'Công việc',f:r=>r.c,cls:'r-code'},{h:'Việc trước',f:r=>r.pre.join(',')||'–'},{h:'t (tuần)',f:r=>r.t,cls:'r-t'},{h:'Việc sau*',f:r=>r.succ.join(',')||'–',cls:'r-succ'}],G.list);
+const L_G='<span><i class="barc"></i>việc găng</span><span><i class="bar"></i>việc không găng</span><span><i class="sl"></i>dự trữ</span>';
+function rows(G,mode,opt){
+  opt=opt||{};
+  return G.list.map(x=>{
+    const col=opt.plain?false:x.crit;
+    const s=mode==='late'?x.LS:x.ES;
+    const r={label:x.c,crit:col,bars:[{s,d:x.t,crit:col,txt:x.c+' · '+x.t}]};
+    if(!opt.plain&&x.TF>0)r.slack=mode==='late'?[[x.ES,x.LS,'sớm được '+x.TF]]:[[x.EF,x.LF,'TF '+x.TF]];
+    return r;
+  });
+}
+const empty=G.list.map(x=>({label:x.c,bars:[]}));
+const tES=a=>G.list.map(x=>[x.c,x.t,x.pre.join(',')||'–',x.ES,x.EF]);
+const tAll=()=>G.list.map(x=>[x.c,x.t,x.ES,x.EF,x.LS,x.LF,x.TF]);
+const critIdx=G.list.map((x,i)=>x.crit?i:-1).filter(i=>i>=0);
+const STEPS=[
+ {chap:'Đề',t:'Muốn vẽ Gantt phải có số liệu thời gian',hl:[],render:v=>gantt(v,{T:15,rows:empty,animate:false,unitLabel:'tuần'}),
+  b:`<p>Đây là ví dụ Gantt trong slide chương 4 (8 công việc, đơn vị tuần). Biểu đồ trống bên cạnh là “tờ giấy kẻ ô”: mỗi việc một dòng, trục ngang 15 tuần.</p>
+     <p>Gantt không tự sinh ra thời gian. Phải tính <b>ES, EF, LS, LF</b> trước, rồi mới đặt thanh vào đúng chỗ.</p>`,
+  r:'Gantt = bảng thời gian vẽ thành thanh ngang'},
+ {chap:'Đi xuôi',t:'Tính ES, EF (lấy MAX)',hl:['G','H'],render:v=>dataTable(v,{head:['CV','t','Việc trước','ES','EF'],rows:tES(),newFrom:3}),
+  b:`<div class="calc">A 0→2 · B 0→3<br>C 2→4 · D 3→7<br>E 4→8 · F 4→7<br>G: max(EF D 7, EF E 8) = 8 → 13<br>H: max(EF F 7, EF G 13) = 13 → 15</div><p><b>T = 15 tuần</b>, khớp với 15 cột tuần trong slide.</p>`,
+  r:'ES = Max(EF các việc trước) · EF = ES + t'},
+ {chap:'Đi ngược',t:'Tính LS, LF và TF (lấy MIN)',hl:['B','D','F'],render:v=>dataTable(v,{head:['CV','t','ES','EF','LS','LF','TF'],rows:tAll(),newFrom:4,pos:[6],crit:critIdx}),
+  b:`<div class="calc">H 15→13 · G 13→8 · F 13→10<br>E 8→4 · D 8→4<br>C: LF = min(LS E 4, LS F 10) = 4 → 2<br>B 4→1 · A 2→0</div><p>Việc găng: <b>A, C, E, G, H</b>. Có dự trữ: B (1), D (1), F (6).</p>`,
+  r:'LF = Min(LS các việc sau) · TF = LS − ES'},
+ {chap:'Kẻ khung',t:'Kẻ trục thời gian, mỗi việc một dòng',hl:[],render:v=>gantt(v,{T:15,rows:empty,animate:false,unitLabel:'tuần',tlines:[15]}),
+  b:`<p>Trục ngang từ 0 tới T = 15, mỗi ô là 1 tuần. Cột trái ghi tên việc theo thứ tự đề cho.</p>
+     <div class="key"><b>Đọc mốc cho đúng:</b> ES = 2 nghĩa là bắt đầu tại mốc 2, tức <b>đầu tuần thứ 3</b>. Slide đánh số ô tuần 1…15, còn trục ở đây ghi mốc 0…15; hai cách cùng một nghĩa.</div>`,
+  r:'Độ dài thanh tỉ lệ đúng với thời gian'},
+ {chap:'Vẽ thanh',t:'Vẽ từng thanh tại ES',hl:['A','B','C','D','E','F','G','H'],render:v=>gantt(v,{T:15,rows:rows(G,'early',{plain:true}),unitLabel:'tuần',tlines:[15],rowDelay:.3}),
+  legend:'<span><i class="bar"></i>công việc</span>',
+  b:`<p>Đi lần lượt từng dòng: đặt đầu thanh ở <b>ES</b>, kéo dài đúng <b>t</b> ô.</p>
+     <div class="calc">A: 0 → 2 · B: 0 → 3 · C: 2 → 4<br>D: 3 → 7 · E: 4 → 8 · F: 4 → 7<br>G: 8 → 13 · H: 13 → 15</div>
+     <p>Mẹo kiểm tra: đầu mỗi thanh phải nằm đúng ở cuối thanh muộn nhất trong các việc trước nó (G bắt đầu ở 8 vì E xong lúc 8).</p>`,
+  r:'Gantt triển khai sớm: thanh bắt đầu tại ES'},
+ {chap:'Tô găng',t:'Tô đỏ việc găng, vẽ phần dự trữ',hl:['B','D','F'],legend:L_G,render:v=>gantt(v,{T:15,rows:rows(G,'early'),unitLabel:'tuần',tlines:[15]}),
+  b:`<p>Tô đỏ các việc TF = 0: A, C, E, G, H. Chúng nối liền nhau từ 0 tới 15, đó chính là đường găng.</p>
+     <p>Với việc có dự trữ, vẽ <b>nét chấm từ EF tới LF</b>: B chấm 3 → 4, D chấm 7 → 8, F chấm 7 → 13. Việc đó được trễ trong khoảng chấm mà dự án vẫn xong tuần 15.</p>`,
+  r:'Dự trữ TF vẽ bằng nét chấm sau thanh'},
+ {chap:'Gantt muộn',t:'Gantt triển khai muộn: thanh bắt đầu tại LS',hl:['B','D','F'],legend:L_G,render:v=>gantt(v,{T:15,rows:rows(G,'late'),unitLabel:'tuần',tlines:[15]}),
+  b:`<p>Vẽ lại, nhưng đầu thanh đặt ở <b>LS</b>. Việc găng đứng yên. B dịch 1, D dịch 1, <b>F dịch 6 tuần</b> (10 → 13).</p>
+     <p>Nét chấm giờ nằm <b>trước</b> thanh: khoảng việc đó có thể làm sớm hơn.</p>
+     <ul><li><b>Sớm:</b> có dự phòng, nhưng bỏ vốn sớm.</li><li><b>Muộn:</b> vốn không đọng, nhưng mọi việc thành găng.</li></ul>`,
+  r:'Gantt triển khai muộn: thanh bắt đầu tại LS'},
+ {chap:'Điều chỉnh',t:'Gantt điều chỉnh: việc nối tiếp chung một dòng',hl:[],legend:L_G+'<span><i></i>nhánh nhập vào</span>',
+  render:v=>gantt(v,{T:15,unitLabel:'tuần',tlines:[15],labelW:70,rowH:46,
+    rows:[{label:'Găng',crit:true,bars:['A','C','E','G','H'].map(c=>({s:G.T[c].ES,d:G.T[c].t,crit:true,txt:c}))},
+          {label:'B → D',bars:[{s:0,d:3,txt:'B'},{s:3,d:4,txt:'D'}],slack:[[7,8,'1']]},
+          {label:'F',bars:[{s:4,d:3,txt:'F'}],slack:[[7,13,'dư 6']]}],
+    links:[{x:4,from:0,to:2},{x:8,from:1,to:0},{x:13,from:2,to:0}]}),
+  b:`<p>Ghép các việc nối tiếp nhau lên <b>cùng một dòng</b>, 8 dòng gọn còn 3:</p>
+     <ul><li>Dòng 1: đường găng A → C → E → G → H.</li><li>Dòng 2: B → D, nhập vào G ở tuần 8.</li><li>Dòng 3: F tách ra sau C (tuần 4), nhập vào H ở tuần 13.</li></ul>
+     <p>Mũi tên dọc cho thấy quan hệ trước – sau, chính là thứ Gantt thường thiếu. Đây là “quan hệ giữa PERT và Gantt” trong slide.</p>`,
+  r:'Gantt điều chỉnh khắc phục nhược điểm không thể hiện quan hệ công việc'},
+ {chap:'Sử dụng',t:'Dùng Gantt để theo dõi và trả lời câu hỏi',hl:['D','E','F'],legend:L_G+'<span><i class="v"></i>thời điểm kiểm tra</span>',
+  render:v=>gantt(v,{T:15,rows:rows(G,'early'),unitLabel:'tuần',tlines:[15],animate:false,vline:{x:6,label:'cuối tuần 6'}}),
+  b:`<p>Kẻ một đường dọc tại thời điểm cần xét. Thanh nào cắt đường đó là việc <b>đang làm</b>:</p>
+     <div class="calc">Cuối tuần 6: D (3→7), E (4→8), F (4→7)</div>
+     <p>Câu hỏi hay gặp:</p>
+     <ul><li>F chậm 4 tuần có ảnh hưởng không? F có TF = 6 nên <b>không</b>.</li>
+     <li>D chậm 2 tuần? TF = 1 nên dự án <b>trễ 1 tuần</b>.</li>
+     <li>E chậm 1 tuần? E là việc găng nên dự án trễ đúng <b>1 tuần</b>.</li></ul>`,
+  r:'Dự án trễ = max(0 ; số tuần chậm − TF)'}
+];
+runStepper(STEPS,$('deTbl'));
+
+const P=cpm([['A','',3],['B','',2],['C','A',4],['D','B',3],['E','C,D',2],['F','D',5]]);
+const pCrit=P.list.map((x,i)=>x.crit?i:-1).filter(i=>i>=0);
+wirePractice({
+  gt:v=>dataTable(v,{head:['CV','t','ES','EF','LS','LF','TF'],rows:P.list.map(x=>[x.c,x.t,x.ES,x.EF,x.LS,x.LF,x.TF]),pos:[6],crit:pCrit,animate:false}),
+  ge:v=>gantt(v,{T:10,rows:rows(P,'early'),unitLabel:'ngày',tlines:[10]}),
+  gl:v=>gantt(v,{T:10,rows:rows(P,'late'),unitLabel:'ngày',tlines:[10]})
+});
+
+</script>

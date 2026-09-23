@@ -34,6 +34,16 @@ Giải **Bài tập 1** chương 4 (10 công việc, đơn vị giờ) qua 10 b�
 ### [`Viec-gia-AOA.html`](Viec-gia-AOA.html)
 3 ví dụ về **việc giả (việc ảo)** trong AOA, mỗi ví dụ đi qua Đề → Vẽ sai → Sửa đúng: hai việc chung gốc và đích, việc trước chồng nhau một phần, và trường hợp cần 2 việc giả. Kèm cách phát hiện khi đọc đề và checklist sau khi vẽ.
 
+### Bộ 4 trang ôn phần còn lại của chương 4
+Mỗi trang gồm: kiến thức cần nhớ, **ví dụ có lời giải từng bước** (bấm Tiếp hoặc phím ← →) và **bài tự luyện** mở lời giải từng bước.
+
+| File | Nội dung |
+|---|---|
+| [`Ve-Gantt-tung-buoc.html`](Ve-Gantt-tung-buoc.html) | Vẽ Gantt sớm, muộn, điều chỉnh và đọc Gantt, ví dụ 8 công việc trong slide (T = 15 tuần) |
+| [`PERT-3-thoi-gian.html`](PERT-3-thoi-gian.html) | Tính Ttb = (a + 4m + b)/6 rồi làm tiếp như CPM |
+| [`Duong-cheo-tung-buoc.html`](Duong-cheo-tung-buoc.html) | Vẽ và đọc biểu đồ đường chéo, ví dụ trong slide (chậm 2 tuần) |
+| [`Tinh-huong-tien-do.html`](Tinh-huong-tien-do.html) | Tình huống Công ty DEF (21 tháng) và bài chậm tiến độ trên dự án Workshop |
+
 Cả hai trang mặc định giao diện tối, có nút ☀️/🌙 ở góc trên bên phải để đổi và ghi nhớ lựa chọn.
 
 ## Nguồn

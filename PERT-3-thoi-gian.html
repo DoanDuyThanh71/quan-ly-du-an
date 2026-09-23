@@ -1,0 +1,525 @@
+<title>PERT ba thời gian</title>
+<meta name="description" content="Học PERT ba thời gian: tính Ttb = (a + 4m + b)/6 rồi làm tiếp như CPM, qua ví dụ từng bước và một bài tự luyện có lời giải.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+  :root{
+    --bg:#f6f7fb; --surface:#ffffff; --surface-2:#eef0fc;
+    --ink:#1c2033; --ink-soft:#585e78; --ink-faint:#8388a3; --border:#e1e3f0; --grid:#eceef7;
+    --accent:#4a3fd9; --accent-ink:#ffffff; --accent-soft:#ece9ff; --plan:#a9a3f0;
+    --critical:#c8401f; --critical-soft:#fbeae4;
+    --new:#a86400; --new-ink:#7a4900; --new-soft:#fff3d9;
+    --good:#1f7a4d; --good-soft:#e3f4ea;
+    --shadow:0 1px 2px rgba(28,32,51,.04),0 8px 24px rgba(28,32,51,.06);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      color-scheme:dark;
+      --bg:#13141d; --surface:#1a1c28; --surface-2:#232640;
+      --ink:#eef0fb; --ink-soft:#a7acc7; --ink-faint:#767b98; --border:#2d3050; --grid:#23263a;
+      --accent:#9b93ff; --accent-ink:#14152a; --accent-soft:#252a4d; --plan:#5b5596;
+      --critical:#ff8465; --critical-soft:#3a231d;
+      --new:#ffcf66; --new-ink:#ffe1a3; --new-soft:#3a2f12;
+      --good:#6fd6a0; --good-soft:#18302a;
+      --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.35);
+    }
+  }
+  :root[data-theme="dark"]{
+    color-scheme:dark;
+    --bg:#13141d; --surface:#1a1c28; --surface-2:#232640;
+    --ink:#eef0fb; --ink-soft:#a7acc7; --ink-faint:#767b98; --border:#2d3050; --grid:#23263a;
+    --accent:#9b93ff; --accent-ink:#14152a; --accent-soft:#252a4d; --plan:#5b5596;
+    --critical:#ff8465; --critical-soft:#3a231d;
+    --new:#ffcf66; --new-ink:#ffe1a3; --new-soft:#3a2f12;
+    --good:#6fd6a0; --good-soft:#18302a;
+    --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.35);
+  }
+  *{box-sizing:border-box}
+  body{background:var(--bg);color:var(--ink);font-family:"Be Vietnam Pro",system-ui,sans-serif;line-height:1.55;padding-inline:16px}
+  .wrap{max-width:1120px;margin-inline:auto;padding-block:26px 56px}
+  h1{font-size:clamp(1.4rem,4vw,1.9rem);font-weight:800;letter-spacing:-.01em;margin:6px 0 8px;text-wrap:balance}
+  h2{font-size:1.1rem;font-weight:800;margin:0 0 10px;text-wrap:balance}
+  p{margin:0 0 10px;max-width:68ch}
+  .eyebrow{font-family:"IBM Plex Mono",monospace;font-size:.7rem;letter-spacing:.09em;text-transform:uppercase;color:var(--accent);font-weight:600;margin:0 0 6px}
+  .lede{color:var(--ink-soft);max-width:72ch}
+  .top{display:flex;justify-content:space-between;align-items:flex-start;gap:16px}
+  .theme-btn{flex:none;border:1px solid var(--border);background:var(--surface);color:var(--ink);border-radius:999px;padding:7px 12px;font:inherit;font-size:.85rem;cursor:pointer}
+  button:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:16px;box-shadow:var(--shadow)}
+
+  .part{margin-top:30px}
+  .part-head{display:flex;align-items:baseline;gap:6px 14px;flex-wrap:wrap;margin-bottom:12px}
+  .part-head h2{font-size:1.3rem;margin:0}
+  .part-head span{font-size:.85rem;color:var(--ink-faint)}
+
+  .theory{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px;margin-top:18px}
+  .th-item{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:12px 16px;font-size:.88rem;color:var(--ink-soft)}
+  .th-item b{color:var(--ink)}
+  .th-item .k{display:block;font-family:"IBM Plex Mono",monospace;font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);font-weight:600;margin-bottom:3px}
+  .th-item .f{display:block;font-family:"IBM Plex Mono",monospace;font-size:.9rem;color:var(--ink);background:var(--surface-2);border-radius:8px;padding:5px 8px;margin:6px 0 2px}
+
+  .de{padding:14px 18px;margin-bottom:14px}
+  .de-head{display:flex;align-items:baseline;gap:4px 12px;flex-wrap:wrap;margin-bottom:8px}
+  .de-head h3{margin:0;font-size:1rem;font-weight:800}
+  .de-head span{font-size:.8rem;color:var(--ink-faint)}
+  .de p{font-size:.9rem;color:var(--ink-soft);margin:8px 0 0}
+  .tblwrap{overflow-x:auto}
+  table{border-collapse:collapse;font-variant-numeric:tabular-nums}
+  table.de-tbl{font-size:.95rem}
+  table.de-tbl th{text-align:left;font-size:.7rem;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-faint);font-weight:600;padding:6px 14px 6px 0;white-space:nowrap;border-bottom:1px solid var(--border)}
+  table.de-tbl td{text-align:center;font-family:"IBM Plex Mono",monospace;min-width:52px;padding:6px 8px;border-bottom:1px solid var(--border);white-space:nowrap;transition:background .2s}
+  table.de-tbl tr.r-code td{font-weight:800}
+  table.de-tbl tr.r-t td{font-weight:700}
+  table.de-tbl tr.r-succ td{color:var(--new-ink);font-size:.86rem}
+  table.de-tbl td.hl{background:var(--accent-soft);color:var(--accent)}
+
+  .stage{display:grid;grid-template-columns:1.5fr 1fr;gap:18px;align-items:start}
+  @media (max-width:900px){.stage{grid-template-columns:1fr}}
+  .stage>*{min-width:0}
+  .canvas{padding:14px}
+  .chapters{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+  .chap{border:1px solid var(--border);background:var(--surface);color:var(--ink-soft);border-radius:999px;padding:5px 11px;font:inherit;font-size:.78rem;font-weight:600;cursor:pointer}
+  .chap.on{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+  .viewbox{overflow-x:auto;-webkit-overflow-scrolling:touch;min-height:180px}
+  .viewbox svg,.solview svg{display:block;width:100%;min-width:600px;height:auto}
+  .legend{display:flex;flex-wrap:wrap;gap:6px 16px;margin:8px 4px 0;font-size:.78rem;color:var(--ink-soft)}
+  .legend span{display:inline-flex;align-items:center;gap:6px}
+  .legend i{display:inline-block;width:22px;height:0;border-top:2px solid var(--ink-soft)}
+  .legend i.c{border-top-width:3px;border-color:var(--critical)}
+  .legend i.bar{height:10px;border:none;border-radius:3px;background:var(--accent)}
+  .legend i.barc{height:10px;border:none;border-radius:3px;background:var(--critical)}
+  .legend i.plan{height:10px;border:none;border-radius:3px;background:var(--plan)}
+  .legend i.sl{border-top:2px dotted var(--ink-faint)}
+  .legend i.g{border-top:3px solid var(--good)}
+  .legend i.d{border-top:2px dashed var(--ink-faint)}
+  .legend i.v{border-top:2px dashed var(--new)}
+  .controls{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:12px;padding-top:12px;border-top:1px solid var(--border)}
+  .btn{border:1px solid var(--border);background:var(--surface-2);color:var(--ink);border-radius:10px;padding:8px 14px;font:inherit;font-weight:700;font-size:.88rem;cursor:pointer}
+  .btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+  .btn:disabled{opacity:.4;cursor:default}
+  .counter{font-family:"IBM Plex Mono",monospace;font-size:.82rem;color:var(--ink-soft);margin-inline:4px}
+  .dots{display:flex;gap:5px;flex-wrap:wrap;margin-left:auto}
+  .dot{width:11px;height:11px;border-radius:50%;border:none;background:var(--border);cursor:pointer;padding:0}
+  .dot.done{background:var(--accent-soft);box-shadow:inset 0 0 0 1.5px var(--accent)}
+  .dot.on{background:var(--accent)}
+  .hint{font-size:.75rem;color:var(--ink-faint);margin-top:8px}
+
+  .panel{padding:18px 20px;display:grid;gap:14px}
+  .step-no{font-family:"IBM Plex Mono",monospace;font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);font-weight:600}
+  .panel h3{margin:2px 0 0;font-size:1.08rem;font-weight:800;text-wrap:balance}
+  .body{font-size:.93rem;color:var(--ink-soft)}
+  .body p{margin:0 0 8px}
+  .body b{color:var(--ink)}
+  .calc{font-family:"IBM Plex Mono",monospace;font-size:.84rem;background:var(--surface-2);border-radius:8px;padding:8px 10px;margin:6px 0 8px;color:var(--ink);line-height:1.75;font-variant-numeric:tabular-nums}
+  .body ul,.sol-body ul,.sol-body ol{margin:4px 0 8px;padding-left:18px;display:grid;gap:3px}
+  .key{background:var(--new-soft);border-radius:10px;padding:9px 12px;margin:8px 0;color:var(--ink)}
+  .key b{color:var(--new-ink)}
+  .rule{font-size:.84rem;border-radius:10px;padding:9px 12px;background:var(--accent-soft);color:var(--ink)}
+  .rule b{display:block;font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;font-family:"IBM Plex Mono",monospace;color:var(--accent);margin-bottom:2px}
+  .rule.warn{background:var(--new-soft)}
+  .rule.warn b{color:var(--new-ink)}
+
+  table.big{font-size:.93rem;width:100%}
+  table.big th,table.big td{text-align:center;padding:7px 6px;border-bottom:1px solid var(--border);white-space:nowrap}
+  table.big th{font-size:.7rem;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-faint);font-weight:600}
+  table.big td{font-family:"IBM Plex Mono",monospace}
+  table.big tr.crit td{color:var(--critical);font-weight:700}
+  table.big tr.focus td{background:var(--accent-soft)}
+  table.big td.pos{background:var(--new-soft);color:var(--new-ink);font-weight:700}
+  table.big td.ghost{color:var(--ink-faint)}
+  .tnote{font-size:.8rem;color:var(--ink-faint);margin-top:6px}
+
+  /* self-practice */
+  .practice{padding:16px 18px}
+  .practice .intro{font-size:.9rem;color:var(--ink-soft);margin:0 0 12px}
+  details.sol{border:1px solid var(--border);border-radius:12px;margin-top:10px;background:var(--surface)}
+  details.sol summary{cursor:pointer;padding:11px 14px;font-weight:700;font-size:.93rem;list-style:none;display:flex;align-items:center;gap:10px}
+  details.sol summary::-webkit-details-marker{display:none}
+  details.sol summary::before{content:"+";font-family:"IBM Plex Mono",monospace;width:22px;height:22px;border-radius:6px;background:var(--accent-soft);color:var(--accent);display:inline-grid;place-items:center;flex:none}
+  details.sol[open] summary::before{content:"−"}
+  details.sol summary small{font-weight:500;color:var(--ink-faint);font-size:.78rem;margin-left:auto}
+  .sol-body{padding:0 14px 14px;font-size:.9rem;color:var(--ink-soft)}
+  .sol-body b{color:var(--ink)}
+  .solview{overflow-x:auto;margin-top:8px}
+
+  /* SVG */
+  svg text{font-family:"Be Vietnam Pro",system-ui,sans-serif}
+  .g-grid{stroke:var(--grid);stroke-width:1}
+  .g-grid.major{stroke:var(--border)}
+  .g-axis{font-family:"IBM Plex Mono",monospace;font-size:10.5px;fill:var(--ink-faint);text-anchor:middle}
+  .g-row{font-size:12.5px;font-weight:700;fill:var(--ink)}
+  .g-row.crit{fill:var(--critical)}
+  .bar{fill:var(--accent)}
+  .bar.crit{fill:var(--critical)}
+  .bar.plan{fill:var(--plan)}
+  .bar.forecast{fill:var(--critical);opacity:.45}
+  .bar-txt{font-size:11.5px;font-weight:700;fill:var(--surface);text-anchor:middle;pointer-events:none}
+  .slack{stroke:var(--ink-faint);stroke-width:2;stroke-dasharray:2 4;stroke-linecap:round;fill:none}
+  .slack-end{stroke:var(--ink-faint);stroke-width:2}
+  .slack-lbl{font-family:"IBM Plex Mono",monospace;font-size:10.5px;fill:var(--ink-soft)}
+  .link{stroke:var(--ink-soft);stroke-width:1.4;fill:none}
+  .link-head{fill:var(--ink-soft)}
+  .tline{stroke:var(--critical);stroke-width:1.5;stroke-dasharray:4 3}
+  .tline-lbl{font-family:"IBM Plex Mono",monospace;font-size:11px;font-weight:600;fill:var(--critical)}
+  .vline{stroke:var(--new);stroke-width:2;stroke-dasharray:6 4}
+  .vline-lbl{font-size:11.5px;font-weight:700;fill:var(--new)}
+  .arr .line{fill:none;stroke:var(--ink-soft);stroke-width:2}
+  .arr .head{fill:var(--ink-soft)}
+  .arr.crit .line{stroke:var(--critical);stroke-width:3}
+  .arr.crit .head{fill:var(--critical)}
+  .node rect.box{fill:var(--surface);stroke:var(--ink-soft);stroke-width:2}
+  .node.crit rect.box{stroke:var(--critical);stroke-width:3}
+  .node .sep{stroke:var(--border);stroke-width:1.2}
+  .node .name{font-size:19px;font-weight:800;text-anchor:middle;fill:var(--ink)}
+  .node.crit .name{fill:var(--critical)}
+  .node .cell{font-family:"IBM Plex Mono",monospace;font-size:16px;font-weight:700;text-anchor:middle;fill:var(--ink)}
+  .node .cell.ph{font-size:10.5px;font-weight:500;fill:var(--ink-faint)}
+  .node .cell.es{fill:var(--accent)}
+  .node .cell.lf{fill:var(--new)}
+  .node .cell.tf{fill:var(--ink-soft)}
+  .node.crit .cell.tf{fill:var(--critical)}
+  .tag{font-family:"IBM Plex Mono",monospace;font-size:12px;fill:var(--ink-faint)}
+  .d-grid{stroke:var(--grid);stroke-width:1}
+  .d-axis{stroke:var(--ink);stroke-width:2.2}
+  .d-diag{stroke:var(--ink-faint);stroke-width:2;stroke-dasharray:8 6}
+  .d-tick{font-family:"IBM Plex Mono",monospace;font-size:11px;fill:var(--ink-faint);text-anchor:middle}
+  .d-title{font-size:12.5px;font-weight:600;fill:var(--ink-soft)}
+  .d-seg{stroke-width:5;stroke-linecap:round;fill:none}
+  .d-seg.ok{stroke:var(--accent)}
+  .d-seg.fast{stroke:var(--good)}
+  .d-seg.slow{stroke:var(--critical)}
+  .d-dot{fill:var(--ink)}
+  .d-guide{stroke:var(--new);stroke-width:1.5;stroke-dasharray:4 4}
+  .d-lbl{font-size:12.5px;font-weight:700}
+  .d-lbl.ok{fill:var(--accent)} .d-lbl.fast{fill:var(--good)} .d-lbl.slow{fill:var(--critical)}
+  .d-pt{font-family:"IBM Plex Mono",monospace;font-size:11px;font-weight:600;fill:var(--new)}
+
+  @keyframes draw{from{stroke-dashoffset:1}to{stroke-dashoffset:0}}
+  @keyframes fade{from{opacity:0}to{opacity:1}}
+  @keyframes pop{0%{opacity:0;transform:scale(.4)}100%{opacity:1;transform:scale(1)}}
+  @keyframes valpop{0%{opacity:0;transform:translateY(-6px) scale(1.6)}100%{opacity:1;transform:none}}
+  @keyframes grow{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+  @keyframes cellin{0%{opacity:0;background:var(--new-soft)}100%{opacity:1}}
+  .anim-draw{stroke-dasharray:1;animation:draw .7s ease-out both;animation-delay:var(--d,0s)}
+  .anim-fade{animation:fade .45s ease-out both;animation-delay:var(--d,0s)}
+  .anim-pop{transform-box:fill-box;transform-origin:center;animation:pop .45s cubic-bezier(.2,.9,.3,1.25) both;animation-delay:var(--d,0s)}
+  .anim-val{transform-box:fill-box;transform-origin:center;animation:valpop .55s ease-out both;animation-delay:var(--d,0s)}
+  .anim-grow{transform-box:fill-box;transform-origin:left center;animation:grow .55s ease-out both;animation-delay:var(--d,0s)}
+  .anim-cell{animation:cellin .6s ease-out both;animation-delay:var(--d,0s)}
+  @media (prefers-reduced-motion: reduce){.anim-draw,.anim-fade,.anim-pop,.anim-val,.anim-grow,.anim-cell{animation:none}}
+</style>
+
+<div class="wrap">
+  <div class="top">
+    <div>
+      <p class="eyebrow">Chương 4 · PERT</p>
+      <h1>PERT ba thời gian</h1>
+      <p class="lede">Dạng đề cho a, m, b thay vì một cột thời gian. Chỉ thêm đúng một bước so với CPM: đổi a, m, b thành Ttb. Phần còn lại anh đã biết làm.</p>
+    </div>
+    <button class="theme-btn" id="themeBtn" type="button" aria-label="Đổi giao diện sáng/tối">◐ Giao diện</button>
+  </div>
+
+  <div class="theory"><div class="th-item"><span class="k">Ba ước lượng</span><b>a</b>: thuận lợi nhất · <b>m</b>: bình thường · <b>b</b>: xấu nhất.</div><div class="th-item"><span class="k">Công thức</span><span class="f">Ttb = (a + 4m + b) / 6</span>m hay xảy ra nhất nên có trọng số 4.</div><div class="th-item"><span class="k">Sau đó</span>Dùng Ttb làm thời gian của việc, rồi đi xuôi, đi ngược, TF, đường găng như CPM.</div><div class="th-item"><span class="k">Kiểm tra nhanh</span>Luôn có a ≤ Ttb ≤ b. Nếu b cách m xa hơn a thì Ttb &gt; m.</div></div>
+
+  <section class="part" aria-labelledby="exTitle">
+    <div class="part-head"><h2 id="exTitle">Ví dụ có lời giải</h2><span>ví dụ tự soạn để luyện, đơn vị tuần</span></div>
+    <div class="card de">
+      <div class="de-head"><h3>Đề bài</h3><span>tự soạn · thời gian tính bằng tuần</span></div>
+      <div class="tblwrap"><table class="de-tbl" id="deTbl"></table></div>
+      <p><i>Ví dụ này không có trong slide bài giảng; dạng đề giống các đề PERT thường gặp.</i></p>
+    </div>
+    <div class="chapters" id="chapters"></div>
+    <div class="stage">
+      <div class="card canvas">
+        <div class="viewbox" id="view"></div>
+        <div class="legend" id="legend"></div>
+        <div class="controls">
+          <button class="btn" id="prev" type="button">← Trước</button>
+          <button class="btn primary" id="next" type="button">Tiếp →</button>
+          <span class="counter" id="counter"></span>
+          <div class="dots" id="dots"></div>
+        </div>
+        <p class="hint">Phím ← → để chuyển bước · bấm tên bước ở trên để nhảy tới</p>
+      </div>
+      <div class="card panel">
+        <div><div class="step-no" id="stepNo"></div><h3 id="stepTitle"></h3></div>
+        <div class="body" id="stepBody"></div>
+        <div class="rule" id="stepRule"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="part" aria-labelledby="prTitle">
+    <div class="part-head"><h2 id="prTitle">Bài tự luyện</h2><span>tự làm ra giấy trước, rồi mở từng bước để đối chiếu</span></div>
+    <div class="card practice">
+      <p class="intro"><b>Đề:</b> Đơn vị tuần. Tính thời gian trung bình từng việc theo PERT, xác định thời gian hoàn thành, đường găng và dự trữ.</p><div class="tblwrap"><table class="de-tbl"><tbody><tr class="r-code"><th scope="row">Công việc</th><td>A</td><td>B</td><td>C</td><td>D</td><td>E</td><td>F</td></tr><tr class=""><th scope="row">Việc trước</th><td>–</td><td>–</td><td>A</td><td>A</td><td>B,C</td><td>D</td></tr><tr class="r-t"><th scope="row">a</th><td>1</td><td>2</td><td>3</td><td>2</td><td>1</td><td>4</td></tr><tr class="r-t"><th scope="row">m</th><td>2</td><td>4</td><td>5</td><td>3</td><td>3</td><td>5</td></tr><tr class="r-t"><th scope="row">b</th><td>3</td><td>12</td><td>7</td><td>10</td><td>5</td><td>12</td></tr></tbody></table></div><details class="sol"><summary>Bước 1 · Tính Ttb = (a + 4m + b) / 6<small>từng dòng</small></summary><div class="sol-body"><div class="calc">A: (1 + 8 + 3) / 6 = 2<br>B: (2 + 16 + 12) / 6 = 5<br>C: (3 + 20 + 7) / 6 = 5<br>D: (2 + 12 + 10) / 6 = 4<br>E: (1 + 12 + 5) / 6 = 3<br>F: (4 + 20 + 12) / 6 = 6</div><p>Để ý B và D: m nhỏ nhưng b lớn (rủi ro chậm cao) nên Ttb lớn hơn m.</p></div></details><details class="sol"><summary>Bước 2 · Đi xuôi, đi ngược với Ttb<small>như CPM</small></summary><div class="sol-body"><div class="solview" data-render="pt"></div><div class="calc">E: ES = max(EF B 5, EF C 7) = 7<br>T = max(EF E 10, EF F 12) = 12<br>A: LF = min(LS C 4, LS D 2) = 2</div></div></details><details class="sol"><summary>Bước 3 · Sơ đồ AON và đường găng<small>TF = 0</small></summary><div class="sol-body"><div class="solview" data-render="pa"></div><p>Đường găng <b>A → D → F</b> = 2 + 4 + 6 = <b>12 tuần</b>. B dư 4 tuần, C và E dư 2 tuần.</p><p>E và F đều không có việc sau. T là EF lớn nhất của chúng (F: 12). Vẽ AON đầy đủ có thể thêm một nút “Kết thúc” nối từ E và F.</p></div></details><details class="sol"><summary>Bước 4 · Kết luận viết vào bài<small>mẫu câu</small></summary><div class="sol-body"><p>“Theo PERT, dự án hoàn thành trong 12 tuần. Đường găng gồm A, D, F; cần giám sát chặt vì chậm tuần nào là dự án trễ tuần đó. B có dự trữ 4 tuần, C và E có dự trữ 2 tuần.”</p></div></details>
+    </div>
+  </section>
+</div>
+
+<script>
+
+const NS='http://www.w3.org/2000/svg';
+const $=id=>document.getElementById(id);
+function el(tag,attrs,parent){const e=document.createElementNS(NS,tag);if(attrs)for(const k in attrs)e.setAttribute(k,attrs[k]);if(parent)parent.appendChild(e);return e}
+function txt(parent,x,y,s,cls,extra){const t=el('text',Object.assign({x,y,class:cls||''},extra||{}),parent);t.textContent=s;return t}
+function anim(n,cls,d){if(!n)return;n.classList.add(cls);n.style.setProperty('--d',(d||0)+'s')}
+function svgRoot(view,w,h,label){return el('svg',{viewBox:`0 0 ${w} ${h}`,role:'img','aria-label':label||''},view)}
+const fmt=v=>Number.isInteger(v)?String(v):String(Math.round(v*100)/100).replace('.',',');
+
+/* critical path method on [[code, 'P,Q', t], ...] */
+function cpm(raw){
+  const T={},ORDER=raw.map(r=>r[0]);
+  raw.forEach(([c,p,t],i)=>{T[c]={c,t,pre:p?p.split(','):[],succ:[],i}});
+  ORDER.forEach(c=>T[c].pre.forEach(p=>T[p].succ.push(c)));
+  ORDER.forEach(c=>{const x=T[c];x.ES=x.pre.length?Math.max(...x.pre.map(p=>T[p].EF)):0;x.EF=x.ES+x.t});
+  const TDA=Math.max(...ORDER.map(c=>T[c].EF));
+  [...ORDER].reverse().forEach(c=>{const x=T[c];x.LF=x.succ.length?Math.min(...x.succ.map(s=>T[s].LS)):TDA;x.LS=x.LF-x.t});
+  ORDER.forEach(c=>{const x=T[c];x.TF=x.LS-x.ES;x.minES=x.succ.length?Math.min(...x.succ.map(s=>T[s].ES)):TDA;x.TD=x.minES-x.EF;x.crit=x.TF===0});
+  return {T,ORDER,TDA,list:ORDER.map(c=>T[c])};
+}
+
+function deTable(tbl,cols,rows){
+  tbl.innerHTML='<tbody>'+cols.map(col=>`<tr class="${col.cls||''}"><th scope="row">${col.h}</th>`+rows.map(r=>`<td data-c="${r.c}">${col.f(r)}</td>`).join('')+'</tr>').join('')+'</tbody>';
+}
+function hlDe(tbl,codes){if(tbl)tbl.querySelectorAll('td[data-c]').forEach(td=>td.classList.toggle('hl',codes.includes(td.dataset.c)))}
+
+function dataTable(view,o){
+  let h='<div class="tblwrap"><table class="big"><thead><tr>'+o.head.map(x=>`<th>${x}</th>`).join('')+'</tr></thead><tbody>';
+  o.rows.forEach((r,i)=>{
+    h+=`<tr class="${(o.crit||[]).includes(i)?'crit':''} ${(o.hl||[]).includes(i)?'focus':''}">`;
+    r.forEach((c,j)=>{
+      if(o.shown!=null&&j>=o.shown){h+='<td class="ghost">·</td>';return}
+      const isNew=o.newFrom!=null&&j>=o.newFrom&&o.animate!==false;
+      const pos=(o.pos||[]).includes(j)&&parseFloat(String(c).replace(',','.'))>0;
+      h+=`<td class="${pos?'pos ':''}${isNew?'anim-cell':''}"${isNew?` style="--d:${(.07*i+.1*(j-o.newFrom)).toFixed(2)}s"`:''}>${c}</td>`;
+    });
+    h+='</tr>';
+  });
+  h+='</tbody></table></div>';
+  if(o.note)h+=`<p class="tnote">${o.note}</p>`;
+  view.insertAdjacentHTML('beforeend',h);
+}
+
+/* Gantt chart; rows: {label, crit, bars:[{s,d,crit,cls,txt,y,h}], slack:[[a,b,label]]} */
+function gantt(view,o){
+  const T=o.T,K=o.unit||Math.max(24,Math.min(56,Math.floor(680/T))),X0=o.labelW||64,top=44,rh=o.rowH||34,bh=o.barH||22;
+  const rows=o.rows,n=rows.length,W=X0+T*K+60,H=top+n*rh+30;
+  const svg=svgRoot(view,W,H,o.label||'Biểu đồ Gantt');
+  const gx=h=>X0+h*K,tick=o.tick||(T>16?3:1),A=o.animate!==false;
+  for(let h=0;h<=T;h++){
+    el('line',{x1:gx(h),y1:top-6,x2:gx(h),y2:top+n*rh,class:'g-grid'+(h%tick===0?' major':'')},svg);
+    if(h%tick===0)txt(svg,gx(h),top-12,h,'g-axis');
+  }
+  if(o.unitLabel)txt(svg,X0-8,top-12,o.unitLabel,'g-axis',{'text-anchor':'end'});
+  (o.tlines||[]).forEach(v=>{el('line',{x1:gx(v),y1:top-6,x2:gx(v),y2:top+n*rh,class:'tline'},svg);txt(svg,gx(v),top-28,'T = '+v,'tline-lbl',{'text-anchor':'middle'})});
+  rows.forEach((r,i)=>{
+    const y=top+i*rh+(rh-bh)/2;
+    txt(svg,8,top+i*rh+rh/2+4,r.label,'g-row'+(r.crit?' crit':''));
+    (r.slack||[]).forEach(([a,b,lab])=>{
+      if(b<=a)return;
+      const l=el('line',{x1:gx(a)+3,y1:y+bh/2,x2:gx(b),y2:y+bh/2,class:'slack'},svg);
+      const e=el('line',{x1:gx(b),y1:y+bh/2-5,x2:gx(b),y2:y+bh/2+5,class:'slack-end'},svg);
+      const t=lab?txt(svg,(gx(a)+gx(b))/2,y+bh/2-6,lab,'slack-lbl',{'text-anchor':'middle'}):null;
+      if(A){const d=(o.rowDelay||.08)*i+.6;[l,e,t].forEach(q=>anim(q,'anim-fade',d))}
+    });
+    (r.bars||[]).forEach(b=>{
+      const by=b.y!=null?top+i*rh+b.y:y,bhh=b.h||bh;
+      const rect=el('rect',{x:gx(b.s),y:by,width:Math.max(b.d*K,2),height:bhh,rx:4,class:'bar'+(b.cls?' '+b.cls:'')+(b.crit?' crit':'')},svg);
+      const t=(b.txt&&b.d*K>=34)?txt(svg,gx(b.s)+b.d*K/2,by+bhh/2+4,b.txt,'bar-txt'):null;
+      if(A&&!b.still){const d=o.rowDelay!=null?o.rowDelay*i:.04*b.s+.04*i;anim(rect,'anim-grow',d);anim(t,'anim-fade',d+.35)}
+    });
+  });
+  (o.links||[]).forEach(l=>{
+    const x=gx(l.x),yf=top+l.from*rh+rh/2,yt=top+l.to*rh+rh/2,dir=yt>yf?1:-1;
+    const y1=yf+dir*(bh/2),y2=yt-dir*(bh/2+1);
+    const p=el('path',{d:`M${x} ${y1} L${x} ${y2-dir*8}`,class:'link'},svg);
+    const hd=el('path',{d:`M${x} ${y2} L${x-4.5} ${y2-dir*9} L${x+4.5} ${y2-dir*9} Z`,class:'link-head'},svg);
+    if(A){anim(p,'anim-fade',.9);anim(hd,'anim-fade',.9)}
+  });
+  if(o.vline){
+    const x=gx(o.vline.x);
+    const l=el('line',{x1:x,y1:top-6,x2:x,y2:top+n*rh+4,class:'vline'},svg);
+    const t=txt(svg,x,top+n*rh+20,o.vline.label,'vline-lbl',{'text-anchor':'middle'});
+    if(A){anim(l,'anim-fade',.4);anim(t,'anim-fade',.4)}
+  }
+  return svg;
+}
+
+/* AON network; o: {G, pos:{A:[x,y]}, vb:[w,h], vals 0..3, animate:level, crit, drawNew, endY:{'A>B':dy}} */
+function aon(view,o){
+  const W=120,H=86,G=o.G;
+  const svg=svgRoot(view,o.vb[0],o.vb[1],'Sơ đồ AON');
+  const ga=el('g',{},svg),gn=el('g',{},svg);
+  G.ORDER.forEach(c=>G.T[c].succ.forEach(s=>{
+    const a=o.pos[c],b=o.pos[s],ax=a[0]+W/2,ay=a[1],bx=b[0]-W/2,by=b[1]+((o.endY||{})[c+'>'+s]||0);
+    const dx=bx-ax,dy=by-ay,L=Math.hypot(dx,dy),ux=dx/L,uy=dy/L,ex=bx-ux,ey=by-uy;
+    const crit=o.crit&&G.T[c].crit&&G.T[s].crit&&G.T[c].EF===G.T[s].ES;
+    const g=el('g',{class:'arr'+(crit?' crit':'')},ga);
+    const p=el('path',{d:`M${ax} ${ay} L${ex} ${ey}`,class:'line',pathLength:'1'},g);
+    const hl=10,hw=5,hx=ex-ux*hl,hy=ey-uy*hl;
+    const h=el('path',{class:'head',d:`M${ex} ${ey} L${hx+uy*hw} ${hy-ux*hw} L${hx-uy*hw} ${hy+ux*hw} Z`},g);
+    if(o.drawNew){anim(p,'anim-draw',.12*G.T[c].i);anim(h,'anim-fade',.12*G.T[c].i+.55)}
+  }));
+  G.ORDER.forEach(c=>{
+    const x=G.T[c],[cx,cy]=o.pos[c],x0=cx-W/2,y0=cy-H/2,cw=W/3;
+    const g=el('g',{class:'node'+(o.crit&&x.crit?' crit':'')},gn);
+    el('rect',{x:x0,y:y0,width:W,height:H,rx:8,class:'box'},g);
+    el('line',{x1:x0,y1:cy-14,x2:x0+W,y2:cy-14,class:'sep'},g);
+    el('line',{x1:x0,y1:cy+14,x2:x0+W,y2:cy+14,class:'sep'},g);
+    [1,2].forEach(i=>{el('line',{x1:x0+cw*i,y1:y0,x2:x0+cw*i,y2:cy-14,class:'sep'},g);el('line',{x1:x0+cw*i,y1:cy+14,x2:x0+cw*i,y2:y0+H,class:'sep'},g)});
+    txt(g,cx,cy+7,c,'name');
+    const xs=[x0+cw/2,cx,x0+cw*2.5],ty=cy-23,by=cy+35,n=G.ORDER.length;
+    txt(g,xs[1],ty,fmt(x.t),'cell');
+    const fw=.2+.3*x.i,bw=.2+.3*(n-1-x.i);
+    const put=(px,py,val,ph,cls,lvl,d)=>{
+      if(o.vals>=lvl){const t=txt(g,px,py,fmt(val),'cell '+cls);if(o.animate===lvl)anim(t,'anim-val',d)}
+      else txt(g,px,py-1,ph,'cell ph');
+    };
+    put(xs[0],ty,x.ES,'ES','es',1,fw);put(xs[2],ty,x.EF,'EF','es',1,fw+.12);
+    put(xs[2],by,x.LF,'LF','lf',2,bw);put(xs[0],by,x.LS,'LS','lf',2,bw+.12);
+    put(xs[1],by,x.TF,'TF','tf',3,.15+.1*x.i);
+    if(o.drawNew)anim(g,'anim-pop',.12*x.i);
+  });
+  txt(gn,14,o.vb[1]-8,'Ô: ES | t | EF  ·  tên việc  ·  LS | TF | LF','tag');
+  return svg;
+}
+
+/* Diagonal chart: x = actual (thực tế), y = plan (kế hoạch); pts cumulative from [0,0] */
+function diag(view,o){
+  const n=o.n,u=o.unit||Math.floor(480/n),ox=64,top=40,oy=top+n*u,W=ox+n*u+150,H=oy+50;
+  const svg=svgRoot(view,W,H,'Biểu đồ đường chéo');
+  const X=v=>ox+v*u,Y=v=>oy-v*u;
+  for(let i=0;i<=n;i++){
+    el('line',{x1:X(i),y1:Y(0),x2:X(i),y2:Y(n),class:'d-grid'},svg);
+    el('line',{x1:X(0),y1:Y(i),x2:X(n),y2:Y(i),class:'d-grid'},svg);
+    txt(svg,X(i),oy+17,i,'d-tick');
+    txt(svg,ox-12,Y(i)+4,i,'d-tick',{'text-anchor':'end'});
+  }
+  el('line',{x1:X(0),y1:Y(0),x2:X(n),y2:Y(0),class:'d-axis'},svg);
+  el('line',{x1:X(0),y1:Y(0),x2:X(0),y2:Y(n),class:'d-axis'},svg);
+  const dl=el('line',{x1:X(0),y1:Y(0),x2:X(n),y2:Y(n),class:'d-diag'},svg);
+  txt(svg,X(n)+6,Y(n)+4,'đường chéo','d-title');
+  txt(svg,X(n)+6,Y(n)+19,'(đúng kế hoạch)','d-title');
+  txt(svg,X(n),oy+38,'Thực tế (tuần) →','d-title',{'text-anchor':'end'});
+  txt(svg,ox-8,top-16,'↑ Kế hoạch (tuần)','d-title');
+  if(o.drawAxes)anim(dl,'anim-fade',.3);
+  const show=o.show||0,pts=o.pts;
+  for(let i=0;i<show;i++){
+    const [x1,y1]=pts[i],[x2,y2]=pts[i+1],dx=x2-x1,dy=y2-y1;
+    const kind=dy>dx?'fast':dy<dx?'slow':'ok';
+    const isNew=o.animate&&i===show-1;
+    const seg=el('line',{x1:X(x1),y1:Y(y1),x2:X(x2),y2:Y(y2),class:'d-seg '+kind,pathLength:'1'},svg);
+    const dot=el('circle',{cx:X(x2),cy:Y(y2),r:5.5,class:'d-dot'},svg);
+    const mx=(X(x1)+X(x2))/2,my=(Y(y1)+Y(y2))/2;
+    const word=kind==='fast'?'nhanh '+(dy-dx):kind==='slow'?'chậm '+(dx-dy):'đúng hạn';
+    const lab=kind==='slow'?txt(svg,mx+10,my+18,(o.names?o.names[i]:'CV'+(i+1))+' · '+word,'d-lbl '+kind):
+      txt(svg,mx-10,my-8,(o.names?o.names[i]:'CV'+(i+1))+' · '+word,'d-lbl '+kind,{'text-anchor':'end'});
+    if(isNew){
+      const g1=el('line',{x1:X(x2),y1:Y(y2),x2:X(x2),y2:Y(0),class:'d-guide'},svg);
+      const g2=el('line',{x1:X(x2),y1:Y(y2),x2:X(0),y2:Y(y2),class:'d-guide'},svg);
+      const pt=txt(svg,X(x2)+8,Y(y2)-8,`(${x2} ; ${y2})`,'d-pt');
+      anim(g1,'anim-fade',0);anim(g2,'anim-fade',0);anim(pt,'anim-fade',.2);
+      anim(seg,'anim-draw',.5);anim(dot,'anim-pop',1.1);anim(lab,'anim-fade',1.1);
+    }
+  }
+  return svg;
+}
+
+/* stepper for the worked example */
+function runStepper(STEPS,deTbl){
+  let cur=0;const view=$('view');
+  function draw(){
+    const st=STEPS[cur],N=STEPS.length;
+    view.innerHTML='';st.render(view);
+    $('legend').innerHTML=st.legend||'';
+    $('stepNo').textContent='Bước '+cur+' / '+(N-1)+' · '+st.chap;
+    $('stepTitle').textContent=st.t;
+    $('stepBody').innerHTML=st.b;
+    const r=$('stepRule');r.className='rule'+(st.warn?' warn':'');r.innerHTML='<b>'+(st.warn?'Chỗ hay sai':'Quy tắc')+'</b>'+st.r;
+    hlDe(deTbl,st.hl||[]);
+    $('counter').textContent=(cur+1)+'/'+N;
+    $('prev').disabled=cur===0;$('next').disabled=cur===N-1;
+    const dots=$('dots'),ch=$('chapters');dots.innerHTML='';ch.innerHTML='';
+    STEPS.forEach((s,i)=>{
+      const d=document.createElement('button');d.type='button';d.className='dot'+(i===cur?' on':i<cur?' done':'');
+      d.setAttribute('aria-label','Tới bước '+i+': '+s.chap);d.onclick=()=>go(i);dots.appendChild(d);
+      const c=document.createElement('button');c.type='button';c.className='chap'+(i===cur?' on':'');c.textContent=s.chap;c.onclick=()=>go(i);ch.appendChild(c);
+    });
+  }
+  function go(i){cur=Math.max(0,Math.min(STEPS.length-1,i));draw()}
+  $('prev').onclick=()=>go(cur-1);$('next').onclick=()=>go(cur+1);
+  document.addEventListener('keydown',e=>{
+    if(e.target.closest&&e.target.closest('summary,input,textarea'))return;
+    if(e.key==='ArrowRight'||e.key==='ArrowLeft'){e.preventDefault();go(cur+(e.key==='ArrowRight'?1:-1))}
+  });
+  draw();
+}
+
+/* practice: each solution renders its figure the first time it is opened */
+function wirePractice(RENDERS){
+  document.querySelectorAll('details.sol').forEach(d=>d.addEventListener('toggle',()=>{
+    if(!d.open)return;
+    d.querySelectorAll('.solview[data-render]').forEach(v=>{if(!v.dataset.done){RENDERS[v.dataset.render](v);v.dataset.done='1'}});
+  }));
+}
+
+(function(){
+  const root=document.documentElement;
+  try{const t=localStorage.getItem('qlda-theme');if(t)root.setAttribute('data-theme',t)}catch(e){}
+  $('themeBtn').onclick=()=>{
+    const c=root.getAttribute('data-theme')||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');
+    const n=c==='dark'?'light':'dark';root.setAttribute('data-theme',n);
+    try{localStorage.setItem('qlda-theme',n)}catch(e){}
+  };
+})();
+
+
+const RAW=[['A','',2,3,10],['B','A',1,2,3],['C','A',4,6,14],['D','B',2,4,6],['E','C,D',1,1.5,5]];
+const te=r=>(r[2]+4*r[3]+r[4])/6;
+const G=cpm(RAW.map(r=>[r[0],r[1],te(r)]));
+const byC={};RAW.forEach(r=>byC[r[0]]=r);
+deTable($('deTbl'),[{h:'Công việc',f:r=>r.c,cls:'r-code'},{h:'Việc trước',f:r=>r.pre.join(',')||'–'},{h:'a',f:r=>fmt(byC[r.c][2]),cls:'r-t'},{h:'m',f:r=>fmt(byC[r.c][3]),cls:'r-t'},{h:'b',f:r=>fmt(byC[r.c][4]),cls:'r-t'}],G.list);
+const POS={A:[80,170],B:[265,80],C:[265,265],D:[450,80],E:[640,170]};
+const L_N='<span><i></i>quan hệ trước – sau</span><span><i class="c"></i>đường găng</span>';
+const tTe=()=>RAW.map(r=>[r[0],fmt(r[2]),fmt(r[3]),fmt(r[4]),`(${fmt(r[2])} + ${fmt(4*r[3])} + ${fmt(r[4])}) / 6`,fmt(te(r))]);
+const STEPS=[
+ {chap:'Đề',t:'Đề cho 3 cột thời gian',hl:['A','B','C','D','E'],render:v=>dataTable(v,{head:['CV','a','m','b'],rows:RAW.map(r=>[r[0],fmt(r[2]),fmt(r[3]),fmt(r[4])])}),
+  b:`<p>Khi thời gian mỗi việc không chắc chắn, đề cho 3 con số:</p>
+     <ul><li><b>a</b>: thuận lợi nhất (ngắn nhất)</li><li><b>m</b>: bình thường, hay xảy ra nhất</li><li><b>b</b>: xấu nhất (dài nhất)</li></ul>
+     <p>Việc đầu tiên là đổi 3 con số về <b>một</b> thời gian trung bình Ttb cho mỗi việc.</p>`,
+  r:'PERT coi thời gian là đại lượng ngẫu nhiên (phương pháp ngẫu nhiên)'},
+ {chap:'Tính Ttb',t:'Tính Ttb = (a + 4m + b) / 6',hl:['A','B','C','D','E'],render:v=>dataTable(v,{head:['CV','a','m','b','a + 4m + b','Ttb'],rows:tTe(),newFrom:4}),
+  b:`<p>Thay số từng dòng. <b>m nhân 4</b> vì đó là khả năng hay xảy ra nhất; tổng trọng số 1 + 4 + 1 = 6 nên chia 6.</p>
+     <div class="calc">A: (2 + 12 + 10) / 6 = 4<br>C: (4 + 24 + 14) / 6 = 7<br>E: (1 + 6 + 5) / 6 = 2</div>
+     <p>A có m = 3 nhưng Ttb = 4, vì trường hợp xấu (b = 10) kéo trung bình lên.</p>`,
+  warn:true,r:'Quên nhân 4 cho m, hoặc chia 3 thay vì chia 6'},
+ {chap:'Vẽ AON',t:'Vẽ sơ đồ với Ttb làm thời gian',hl:[],legend:L_N,render:v=>aon(v,{G,pos:POS,vb:[740,350],vals:0,drawNew:true}),
+  b:`<p>Từ đây <b>giống hệt CPM</b>. Vẽ sơ đồ theo cột “Việc trước”, ô giữa hàng trên ghi Ttb.</p><p>E có hai việc trước (C, D) nên nhận hai mũi tên.</p>`,
+  r:'Sau khi có Ttb, PERT làm y như CPM'},
+ {chap:'Đi xuôi',t:'Đi xuôi: ES, EF',hl:['E'],legend:L_N,render:v=>aon(v,{G,pos:POS,vb:[740,350],vals:1,animate:1}),
+  b:`<div class="calc">A 0→4<br>B 4→6 · C 4→11<br>D 6→10<br>E: max(EF C 11, EF D 10) = 11 → 13</div><p><b>T = 13 tuần.</b></p>`,
+  r:'ES = Max(EF các việc trước)'},
+ {chap:'Đi ngược',t:'Đi ngược: LF, LS',hl:['A'],legend:L_N,render:v=>aon(v,{G,pos:POS,vb:[740,350],vals:2,animate:2}),
+  b:`<div class="calc">E 13→11<br>D 11→7 · C 11→4<br>B: LF = LS(D) = 7 → 5<br>A: LF = min(LS B 5, LS C 4) = 4 → 0</div>`,
+  r:'LF = Min(LS các việc sau)'},
+ {chap:'Đường găng',t:'TF và đường găng',hl:['A','C','E'],legend:L_N,render:v=>aon(v,{G,pos:POS,vb:[740,350],vals:3,animate:3,crit:true}),
+  b:`<p>TF = LS − ES: B và D có TF = 1, các việc khác TF = 0.</p><div class="calc">Đường găng A → C → E = 4 + 7 + 2 = 13</div><p>Nhánh A → B → D → E dài 12, dư 1 tuần.</p>`,
+  r:'Đường găng là đường dài nhất'},
+ {chap:'Kết luận',t:'Viết kết luận và lưu ý',hl:[],legend:L_N,render:v=>aon(v,{G,pos:POS,vb:[740,350],vals:3,crit:true}),
+  b:`<p>“Theo PERT, thời gian hoàn thành dự kiến là <b>13 tuần</b>, đường găng A – C – E.”</p>
+     <ul><li>Ttb không nguyên thì giữ 1–2 chữ số thập phân, đừng làm tròn sớm.</li><li>Đơn vị của Ttb giống đơn vị của a, m, b.</li></ul>
+     <p class="tnote">Ngoài slide, phòng khi được hỏi: phương sai mỗi việc σ² = ((b − a) / 6)²; cộng σ² các việc găng để tính xác suất dự án xong đúng hạn.</p>`,
+  r:'Ttb = (a + 4m + b) / 6 là công thức duy nhất slide yêu cầu'}
+];
+runStepper(STEPS,$('deTbl'));
+
+const PR=[['A','',1,2,3],['B','',2,4,12],['C','A',3,5,7],['D','A',2,3,10],['E','B,C',1,3,5],['F','D',4,5,12]];
+const PG=cpm(PR.map(r=>[r[0],r[1],te(r)]));
+wirePractice({
+  pt:v=>dataTable(v,{head:['CV','Ttb','ES','EF','LS','LF','TF'],rows:PG.list.map(x=>[x.c,fmt(x.t),x.ES,x.EF,x.LS,x.LF,x.TF]),pos:[6],crit:PG.list.map((x,i)=>x.crit?i:-1).filter(i=>i>=0),animate:false}),
+  pa:v=>aon(v,{G:PG,pos:{A:[80,120],B:[80,300],D:[290,55],C:[290,200],F:[500,55],E:[500,270]},vb:[620,370],vals:3,crit:true})
+});
+
+</script>
